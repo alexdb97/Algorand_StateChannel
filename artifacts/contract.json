@@ -1,0 +1,49 @@
+{
+  "name": "Draft-Channel",
+  "methods": [
+    {
+      "name": "open_channel",
+      "args": [],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "deposit",
+      "args": [
+        {
+          "type": "pay",
+          "name": "pay"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "tryClose",
+      "args": [
+        {
+          "type": "byte[]",
+          "name": "msg"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "closeChannel",
+      "args": [
+        {
+          "type": "uint64",
+          "name": "secret"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    }
+  ],
+  "networks": {}
+}
