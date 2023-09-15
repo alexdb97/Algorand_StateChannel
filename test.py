@@ -6,6 +6,8 @@ from utilites.util import get_accounts, get_algod_client
 from utilites.deserialize import deserialize
 from Client import Client
 from MyTransaction import MyTransaction
+import time
+
 
 #Create a new algod client, configured to connect to our local sandbox
 algod_address= "http://localhost:4001"
@@ -33,60 +35,42 @@ private_key2,address2,signer2 = acct2.private_key,acct2.address,acct2.signer
 
 account_info = algod_client.account_info(address)
 
-""" 
----------------------------------Retrive Contract------------------------------------ """
+c1 = Client(address,private_key,signer1,algod_token,algod_address,headers={"X-API-Key": algod_token})
+c2 = Client(address2,private_key2,signer2,algod_token,algod_address,headers={"X-API-Key": algod_token})
 
-sp = algod_client.suggested_params()
+contract,appid,appaddr=c1.open_channel(address2)
 
-with open("./artifacts/approval.teal") as f:
-     tmp=f.read()
-     compiled = algod_client.compile(tmp)
-     app_pro = base64.b64decode(compiled["result"])
+c2.insert_channel(contract,appid,appaddr,address)
+
+j=c1.deposit_transaction(address2,100)
+js = c2.sign(address,j)
+c2.add_transaction(address,js)
+c1.add_transaction(address2,js)
+
+c1.deposit(100,address2)
+
+# c1 want to send 50 algos to c2
+j=c1.send_money(address2,50)
+js=c2.sign(address,j)
+c1.add_transaction(address2,js)
+c2.add_transaction(address,js)
+
+# c2 sends 20 algos to c1
+j=c2.send_money(address,20)
+js=c1.sign(address2,j)
+c2.add_transaction(address,js)
+c1.add_transaction(address2,js)
+
+# c2 sends 2 algos to c1
+j=c2.send_money(address,2)
+js=c1.sign(address2,j)
+c2.add_transaction(address,js)
+c1.add_transaction(address2,js)
 
 
-with open("./artifacts/clear.teal") as f:
-     tmp=f.read()
-     compiled = algod_client.compile(tmp)
-     app_clear = base64.b64decode(compiled["result"])
-
-
-with open("./artifacts/contract.json") as f:
-     tmp=f.read()
-     contract = deserialize(tmp)
-"-----------------------------------------------------------------------------------------------"
+c1.presentation(address2)
+c1.close_channel(address2)
 
 
 
 
-c1 = Client(address,private_key,algod_client)
-c2 = Client(address2,private_key2,algod_client)
-
-
-print(address)
-print(address2)
-
-#Create the SmartContract
-channelid,channel_address =c1.open_channel(address2,app_pro,app_clear,contract)
-#Depenency Injection of contract
-c2.set_contract(channelid,channel_address,contract,address)
-
-#Deposit of 101 algos -> 100 for the cannell 1 for the payment of the logic cost
-c1.deposit(101)
-
-# Off-Chain Transaction --------------------------------------------------------------------
-#First exchange -> c1 gives one algo
-t1 = MyTransaction(1,address,address2,99,1,12,address)
-t1.sign(signer2,address2)
-t1.sign(signer1,address)
-
-#second exchange -> c1 gives 50algos
-#Exchange of the secret
-t2 = MyTransaction(2,address,address2,50,50,5,address)
-t2.sign(signer2,address2)
-t2.sign(signer1,address)
-
-# ---------------------------------------------------------------------------------------------
-
-c1.tryClose(t2)
-#close the Smart contract  withdraw the ammount deposited
-c1.closeChannel(0)

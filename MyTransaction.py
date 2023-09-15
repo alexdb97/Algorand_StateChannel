@@ -83,6 +83,15 @@ class MyTransaction():
             setattr(self,attr,d[attr])
         self.signature[0]=d['sig1']
         self.signature[1]=d['sig2']
+    
+    def get_index(self):
+        return self.index
+    
+    def get_amnt1(self):
+        return util.microalgos_to_algos(self.amnt1)
+    
+    def get_amnt2(self):
+        return util.microalgos_to_algos(self.amnt2)
         
 
  
