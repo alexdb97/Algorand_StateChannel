@@ -39,37 +39,24 @@ c1 = Client(address,private_key,signer1,algod_token,algod_address,headers={"X-AP
 c2 = Client(address2,private_key2,signer2,algod_token,algod_address,headers={"X-API-Key": algod_token})
 
 contract,appid,appaddr=c1.open_channel(address2)
-
 c2.insert_channel(contract,appid,appaddr,address)
 
-j=c1.deposit_transaction(address2,100)
-js = c2.sign(address,j)
-c2.add_transaction(address,js)
-c1.add_transaction(address2,js)
+#First stage sendtransaction
+txs=c1.send(address2,100,deposit=True,create=True)
+
+c2.receive(address,txs,signed=False)
+
+txs=c2.send(address)
+
+c1.receive(address2,txs,signed=True)
+
 
 c1.deposit(100,address2)
 
-# c1 want to send 50 algos to c2
-j=c1.send_money(address2,50)
-js=c2.sign(address,j)
-c1.add_transaction(address2,js)
-c2.add_transaction(address,js)
-
-# c2 sends 20 algos to c1
-j=c2.send_money(address,20)
-js=c1.sign(address2,j)
-c2.add_transaction(address,js)
-c1.add_transaction(address2,js)
-
-# c2 sends 2 algos to c1
-j=c2.send_money(address,2)
-js=c1.sign(address2,j)
-c2.add_transaction(address,js)
-c1.add_transaction(address2,js)
 
 
 c1.presentation(address2)
-c1.close_channel(address2)
+c2.close_channel(address)
 
 
 

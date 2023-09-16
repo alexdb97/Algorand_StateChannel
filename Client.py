@@ -4,7 +4,7 @@ from typing import Dict
 from algosdk.v2client import algod
 from utilites.deserialize import deserialize
 from ChainChannel import ChainChannel
-from OffChannel import OffChannel
+from OffChainBalance import OffChainBalance
 
 class Client(algod.AlgodClient):
 
@@ -38,7 +38,7 @@ class Client(algod.AlgodClient):
         appid,address= c.open_channel(self)
         self.opened_channels[counterpart]=c
 
-        o = OffChannel(self.address,counterpart)
+        o = OffChainBalance(self.address,counterpart)
         self.off_channel[counterpart]=o
         
         return contract,appid,address
@@ -48,18 +48,18 @@ class Client(algod.AlgodClient):
         #Verify the state of the channel and the code of it is a part that will come later
         c = ChainChannel(contract=contract,app_id=app_id,app_address=app_address,counterpart=counterpart)
         self.opened_channels[counterpart]=c
-        o = OffChannel(counterpart,self.address)
+        o = OffChainBalance(counterpart,self.address)
         self.off_channel[counterpart]=o
 
     def deposit(self,value,counterpart):
         c:ChainChannel =self.opened_channels[counterpart]
         c.deposit(value,self)
-        off:OffChannel = self.off_channel[counterpart]
+        off:OffChainBalance = self.off_channel[counterpart]
         
 
     def presentation(self,address,transaction=None):
         c:ChainChannel = self.opened_channels[address]
-        c.tryClose(self.off_channel[address].get_last_transaction(),self)
+        c.tryClose(self.off_channel[address].get_transaction().get_contract_payload(),self)
     
     def close_channel(self,address,value=0):
         c:ChainChannel = self.opened_channels[address]
@@ -69,27 +69,27 @@ class Client(algod.AlgodClient):
 
 
     #Off-Chain operations --------------------------------------------------------------
-    def deposit_transaction(self,counterpart,value):
-        offc:OffChannel=self.off_channel[counterpart]
-        json_tx =offc.deposit_transaction(self,value)
-        return json_tx
-
-
-    def send_money(self,counterpart,value):
-        offc:OffChannel =self.off_channel[counterpart]
-        json_tx = offc.create_transaction(self,counterpart,value)
-        return json_tx
+     
+    def send(self,counterpart,value=None,deposit=False,create=False):
+        offc:OffChainBalance=self.off_channel[counterpart]
+        
+        #If it is a new transaction
+        if create:
+            if deposit:
+                json_tx =offc.deposit_transaction(self,value)
+                return json_tx
+            json_tx = offc.create_transaction(self,counterpart,value)
+            return json_tx
+        
+        return offc.get_transaction().serialize()
     
-    def sign(self,counterpart,tx):
-        offc:OffChannel = self.off_channel[counterpart]
-        json_tx = offc.sign_transaction(self,tx)
-        return json_tx
-
-    def add_transaction(self,counterpart,tx):
-        offc:OffChannel = self.off_channel[counterpart]
-        json = offc.insert_transaction(tx)
+    def receive(self,counterpart,tx,signed=False):
+        offc:OffChainBalance = self.off_channel[counterpart]
+        if signed:
+            
+            offc.insert_transaction(tx)
+        else:
+            txs = offc.sign_transaction(self,tx)
+            offc.insert_transaction(txs)
 
     #--------------------------------------------------------------------------------------
-
-    def get_channels(self):
-        return list(self.opened_channels.keys())
