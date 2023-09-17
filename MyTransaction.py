@@ -70,8 +70,6 @@ class MyTransaction():
 
     or for sending it trought a connection.
 
-   
-    
     return : json_transaction
     """ 
     def serialize(self):
@@ -83,15 +81,16 @@ class MyTransaction():
         json_transaction =json.dumps(js)
         return json_transaction
     
+
     """
     deserialize is the inverse process of serialization, therefore it takes a string in a json format, then all the information
 
     are transfered to the internal state of the object.
     
-     :param str: json transaction
+    :param json_tx: json transaction
     """ 
-    def deserialize(self,str):
-        d = json.loads(str)
+    def deserialize(self,json_tx):
+        d = json.loads(json_tx)
         attributes = ['index', 'addr1', 'addr2', 'amnt1', 'amnt2', 'secret', 'secret_proposer']
         for attr in attributes:
             setattr(self,attr,d[attr])
@@ -104,7 +103,6 @@ class MyTransaction():
 
     Smart Contract.
 
-
     return: byte payload
     """
     def get_contract_payload(self):
@@ -116,6 +114,7 @@ class MyTransaction():
         payload.extend(app.encode('latin-1'))
         return payload 
     
+
     """
     get_index: getter method for retriving the index 
 
@@ -124,6 +123,7 @@ class MyTransaction():
     def get_index(self):
         return self.index
     
+
     """
     get_amnt1: getter method for retriving the amount of the first address1
 
@@ -132,6 +132,7 @@ class MyTransaction():
     def get_amnt1(self):
         return util.microalgos_to_algos(self.amnt1)
     
+
     """
     get_amnt2: getter method for retriving the amount of the first address2
 
@@ -141,9 +142,11 @@ class MyTransaction():
         return util.microalgos_to_algos(self.amnt2)
     
 
-    """
-    body_to_bytearray is a private method of the class used for extracting the body of the transaction, it is used in the sign method.
 
+    """
+    body_to_bytearray is a private method of the class used for extracting the body of the transaction, it is used in 
+    
+    the sign method.
 
     return: body
   

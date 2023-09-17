@@ -1,8 +1,16 @@
 from MyTransaction import MyTransaction
 
-import sys
 
 class OffChainBalance():
+
+
+
+    """
+    OffChainBalance class trace all the exchange operations done via offchain channel, therefore it will update the state of transaction
+    
+    and the current balance.
+    """ 
+
 
     def __init__(self,address1,address2) -> None:
         self.transactions = []
@@ -14,6 +22,13 @@ class OffChainBalance():
 
 
 
+    """
+    deposit_transaction, is the first transaction that will fill the current balance.
+
+
+    :param algod: an istance of the client is passed for validating the transaction and discriminate the balance
+    :param value: the amount of money that is inserted inside the balance
+    """ 
     def deposit_transaction(self,algod,value):
         
         if(algod.address==self.address1):
@@ -30,7 +45,12 @@ class OffChainBalance():
             return tx.serialize()
             
 
+    """
+    create_transaction will check the current balance and create the transaction.
 
+    :param algod: an istance of the client is passed for validating the transaction and discriminate the balance
+    :param value: the amount of money that is inserted inside the balance
+    """ 
     def create_transaction(self,algod,address,value):
         
         if(algod.address==self.address1):
@@ -47,24 +67,42 @@ class OffChainBalance():
                 return tx.serialize()
 
 
-    def sign_transaction(self,algod,str):
+    """
+    sign_transaction will sign the transaction provided
+
+    :param algod: an istance of the client is passed for validating the transaction
+    :param json_tx: json format of the transaction
+    """ 
+    def sign_transaction(self,algod,json_tx):
         #Chek all the parameter
         tx = MyTransaction()
-        tx.deserialize(str)
+        tx.deserialize(json_tx)
         tx.sign(algod.signer,algod.address)
         return tx.serialize()
-        
 
-    def insert_transaction(self,str):
+        
+    """
+    insert_transaction will append to the list of the transaction the last one.
+
+    :param json_tx: json format of the transaction
+    """
+    def insert_transaction(self,json_tx):
         #Insert the transaction in the list of transaction authenticated from both
         tx = MyTransaction()
-        tx.deserialize(str)
+        tx.deserialize(json_tx)
         self.index = tx.get_index()
         self.amnt1=tx.get_amnt1()
         self.amnt2 = tx.get_amnt2()
         self.transactions.append(tx)
 
 
+    """
+    get_transaction will retrive from the list of the transaction the last transaction inserted, if index is specified it will
+
+    retrive the transaction at the position given.
+
+    :param index: position of the transaction to retrive
+    """
     def get_transaction(self, index=None):
         try:
             index = index or len(self.transactions)-1  # Use 0 as the default index if index is None or falsy

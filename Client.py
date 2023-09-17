@@ -53,7 +53,7 @@ class Client(algod.AlgodClient):
 
     def deposit(self,value,counterpart):
         c:ChainChannel =self.opened_channels[counterpart]
-        c.deposit(value,self)
+        c.deposit_chain(value,self)
         off:OffChainBalance = self.off_channel[counterpart]
         
 

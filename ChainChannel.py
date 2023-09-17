@@ -11,19 +11,37 @@ from algosdk.atomic_transaction_composer import (
     TransactionWithSigner,      
 )
 
+
 class ChainChannel() :
+
+    """
+    ChainChannel class is the interface with the algorand blockchain, therefore, through algorand transactions, it will
+
+    provide the methods to create, interact and destroy the chain channel.
+
+    """ 
     
     def __init__(self,clear=None,app=None,contract=None,counterpart=None,app_id=None,app_address=None):
         
-        self.app = app
-        self.clear = clear
+        self.app_teal = app
+        self.clear_teal = clear
         self.contract:abi.Contract = contract
         self.counterpart = counterpart
         self.app_id = app_id
         self.app_address = app_address
         
 
-    #Open the Bidirectional Channel deploying the smart contract
+    """
+    open_channel, the method that will create the chain channel, it will be formed of two address,
+
+    the one that will create the transaction will provide also the minimum balance  of 1 algo required for the
+
+
+    :param algod: an istance of the client is passed for validating the algo transactions
+    return app_id,app_address: this are the endpoints of the contract, they are used for interacting and monitoring
+                               inside the blockchain 
+    """ 
+
     def open_channel(self,algod):
         
         #Create the smart contract on the blockchain
@@ -33,8 +51,8 @@ class ChainChannel() :
             algod.address,
             sp,
             on_complete=0,
-            approval_program=self.app,
-            clear_program=self.clear,
+            approval_program=self.app_teal,
+            clear_program=self.clear_teal,
             global_schema=transaction.StateSchema(10,10),
             local_schema=transaction.StateSchema(0,0)
             )
@@ -52,6 +70,7 @@ class ChainChannel() :
         signer = AccountTransactionSigner(algod.private)
         atc = AtomicTransactionComposer()
 
+        #Put inside  1 algo, it is required for the transactions executed by the smart contract itself
         tx = transaction.PaymentTxn(algod.address,sp=sp,receiver=self.app_address,amt=util.algos_to_microalgos(1))
         tws = TransactionWithSigner(tx,signer)
 
@@ -72,8 +91,17 @@ class ChainChannel() :
 
       
 
-    #Deposit an amount of money inside the application
-    def deposit(self,amount,algod):
+    """
+    deposit, the method that will create the chain channel, it will be formed of two address,
+
+    the one that will create the transaction will provide also the minimum balance  of 1 algo required for the
+
+
+    :param algod: an istance of the client is passed for validating the algo transactions
+    return app_id,app_address: this are the endpoints of the contract, they are used for interacting and monitoring
+                               inside the blockchain 
+    """
+    def deposit_chain(self,amount,algod):
 
         algo_to_micro =util.algos_to_microalgos(amount)
 
