@@ -63,10 +63,9 @@ class Client(algod.AlgodClient):
     
     def close_channel(self,address,secret=None):
         c:ChainChannel = self.opened_channels[address]
-        secret=None
-        if(secret):
+        if(secret!=None):
             secret = self.off_channel[address].get_secret(secret)
-        
+      
         c.closeChannel(secret)
     
     #------------------------------------------------------------------------------------------    
@@ -82,7 +81,7 @@ class Client(algod.AlgodClient):
             if deposit:
                 json_tx =offc.deposit_transaction(value)
                 return json_tx
-            json_tx = offc.create_transaction(counterpart,value)
+            json_tx = offc.create_transaction(value)
             return json_tx
         
         return offc.get_transaction().serialize()
@@ -98,7 +97,7 @@ class Client(algod.AlgodClient):
     
     def send_secret(self,counterpart):
         offc:OffChainBalance = self.off_channel[counterpart]
-        return offc.get_secret(-1)
+        return offc.get_secret()
     
     def receive_secret(self,counterpart,secret):
         offc:OffChainBalance = self.off_channel[counterpart]

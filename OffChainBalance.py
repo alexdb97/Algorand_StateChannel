@@ -12,7 +12,6 @@ class OffChainBalance():
     and the current balance.
     """ 
 
-
     def __init__(self,algod,address1,address2) -> None:
         self.secrets = []
         self.algod=algod
@@ -38,6 +37,7 @@ class OffChainBalance():
         hash.update(random_bytes)
         digest = hash.digest()
         self.secrets.append(random_bytes)
+  
 
         if(self.algod.address==self.address1):
             self.amnt1=self.amnt1+value
@@ -65,6 +65,7 @@ class OffChainBalance():
         hash.update(random_bytes)
         digest = hash.digest()
         self.secrets.append(random_bytes)
+
     
         if(self.algod.address==self.address1):
             if(self.amnt1>value):
@@ -110,23 +111,34 @@ class OffChainBalance():
 
 
     """
-    get_transaction will retrive from the list of the transaction the last transaction inserted, if index is specified it will
+    get_transaction will return the last transaction inserted from the list of the transaction, if index is specified it will
 
-    retrive the transaction at the position given.
+    return the transaction at the position given.
 
-    :param index: position of the transaction to retrive
+    :param index: position 
     """
-    def get_transaction(self, index=None):
-        try:
-            index = index or len(self.transactions)-1  # Use 0 as the default index if index is None or falsy
-            tx: MyTransaction = self.transactions.pop(index)
-            return tx
-        except (IndexError):
-            raise ValueError("Index is out of range or None for self.transactions.")
+    def get_transaction(self, index=-1):
 
-    def get_secret(self,value):
-        return self.secrets[value]
+        tx: MyTransaction = self.transactions[index]
+        return tx
+
     
+    """
+    get_secret will return the last secret inserted from the list of secrets, if index is specified it will
+
+    return the secret at the position given.
+
+    :param index: position 
+    """
+    def get_secret(self,index=-1):
+        return self.secrets[index]
+    
+    """
+    insert_secret will append to the list of secrets the last one.
+
+    :param  secret: secret
+    """
     def insert_secret(self,secret):
         self.secrets.append(secret)
+   
 

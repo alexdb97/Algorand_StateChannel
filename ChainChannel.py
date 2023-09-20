@@ -2,7 +2,7 @@
 from base64 import b64decode
 from algosdk import transaction, abi, logic, util
 from MyTransaction import MyTransaction
-
+import hashlib
 
 
 from algosdk.atomic_transaction_composer import (
@@ -164,7 +164,9 @@ class ChainChannel() :
          
          if(secret==None):
             secret= bytes(32)
-      
+         h=hashlib.sha3_256()
+         h.update(secret)
+         digest=h.digest()
          signer = AccountTransactionSigner(self.algod.private)
          atc = AtomicTransactionComposer()
         
@@ -174,7 +176,7 @@ class ChainChannel() :
              sender=self.algod.address,
              sp=sp,
              signer=signer,
-             method_args=[secret],
+             method_args=[digest],
              accounts=[self.algod.address,self.counterpart]
 
          )
