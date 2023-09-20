@@ -21,8 +21,9 @@ class ChainChannel() :
 
     """ 
     
-    def __init__(self,clear=None,app=None,contract=None,counterpart=None,app_id=None,app_address=None):
+    def __init__(self,algod,clear=None,app=None,contract=None,counterpart=None,app_id=None,app_address=None):
         
+        self.algod=algod
         self.app_teal = app
         self.clear_teal = clear
         self.contract:abi.Contract = contract
@@ -42,13 +43,13 @@ class ChainChannel() :
                                inside the blockchain 
     """ 
 
-    def open_channel(self,algod):
+    def open_channel(self):
         
         #Create the smart contract on the blockchain
-        sp = algod.suggested_params()
+        sp = self.algod.suggested_params()
 
         app_tx = transaction.ApplicationCreateTxn(
-            algod.address,
+            self.algod.address,
             sp,
             on_complete=0,
             approval_program=self.app_teal,
@@ -57,9 +58,9 @@ class ChainChannel() :
             local_schema=transaction.StateSchema(0,0)
             )
 
-        signed =app_tx.sign(algod.private)
-        txid = algod.send_transaction(signed)
-        result = transaction.wait_for_confirmation(algod, txid, 4)
+        signed =app_tx.sign(self.algod.private)
+        txid = self.algod.send_transaction(signed)
+        result = transaction.wait_for_confirmation(self.algod, txid, 4)
         
         #Inizialization of application contest
         self.app_id = result['application-index']
@@ -67,25 +68,25 @@ class ChainChannel() :
 
        
         #Strictly open the channel
-        signer = AccountTransactionSigner(algod.private)
+        signer = AccountTransactionSigner(self.algod.private)
         atc = AtomicTransactionComposer()
 
         #Put inside  1 algo, it is required for the transactions executed by the smart contract itself
-        tx = transaction.PaymentTxn(algod.address,sp=sp,receiver=self.app_address,amt=util.algos_to_microalgos(1))
+        tx = transaction.PaymentTxn(self.algod.address,sp=sp,receiver=self.app_address,amt=util.algos_to_microalgos(1))
         tws = TransactionWithSigner(tx,signer)
 
         
         atc.add_method_call(
             app_id=self.app_id,
             method = self.contract.get_method_by_name("open_channel"),
-            sender=algod.address,
+            sender=self.algod.address,
             sp=sp,
             signer=signer,
-            accounts=[algod.address,self.counterpart],
+            accounts=[self.algod.address,self.counterpart],
             method_args=[tws],
         )
 
-        result = atc.execute(algod, 10)  # Wait for 10 rounds
+        result = atc.execute(self.algod, 10)  # Wait for 10 rounds
 
         return self.app_id, self.app_address
 
@@ -101,36 +102,36 @@ class ChainChannel() :
     return app_id,app_address: this are the endpoints of the contract, they are used for interacting and monitoring
                                inside the blockchain 
     """
-    def deposit_chain(self,amount,algod):
+    def deposit_chain(self,amount):
 
         algo_to_micro =util.algos_to_microalgos(amount)
 
-        sp:transaction.SuggestedParams = algod.suggested_params()
+        sp:transaction.SuggestedParams = self.algod.suggested_params()
 
-        signer = AccountTransactionSigner(algod.private)
+        signer = AccountTransactionSigner(self.algod.private)
         atc = AtomicTransactionComposer()
     
-        tx = transaction.PaymentTxn(algod.address,sp=sp,receiver=self.app_address,amt=algo_to_micro)
+        tx = transaction.PaymentTxn(self.algod.address,sp=sp,receiver=self.app_address,amt=algo_to_micro)
         tws = TransactionWithSigner(tx,signer)
         
         atc.add_method_call(
             app_id=self.app_id,
             method = self.contract.get_method_by_name("deposit"),
-            sender=algod.address,
+            sender=self.algod.address,
             sp=sp,
             signer=signer,
             method_args=[tws]
         )
     
-        group_result =atc.execute(algod,2)
+        group_result =atc.execute(self.algod,2)
         return group_result.abi_results[0]
 
 
     #Try Close
-    def tryClose(self,my_tx,algod):
+    def tryClose(self,my_tx):
 
-        sp:transaction.SuggestedParams = algod.suggested_params()
-        signer = AccountTransactionSigner(algod.private)
+        sp:transaction.SuggestedParams = self.algod.suggested_params()
+        signer = AccountTransactionSigner(self.algod.private)
 
         
 
@@ -138,7 +139,7 @@ class ChainChannel() :
         atc.add_method_call(
             app_id=self.app_id,
             method = self.contract.get_method_by_name("tryClose"),
-            sender=algod.address,
+            sender=self.algod.address,
             sp=sp,
             method_args=[my_tx],
             signer=signer,
@@ -146,11 +147,11 @@ class ChainChannel() :
 
         #Reaching the budget of EdVerify using no-op transaction
         for x in range(0,5):
-            txi = transaction.ApplicationNoOpTxn(algod.address,sp,self.app_id,note=str(x).encode('utf-8'))
+            txi = transaction.ApplicationNoOpTxn(self.algod.address,sp,self.app_id,note=str(x).encode('utf-8'))
             tws = TransactionWithSigner(txi,signer)
             atc.add_transaction(tws) 
 
-        group_result = atc.execute(algod, 4)
+        group_result = atc.execute(self.algod, 4)
         return group_result.abi_results[0]
 
 
@@ -158,30 +159,32 @@ class ChainChannel() :
 
 
     #Close channel
-    def closeChannel(self,algod,secret=0):
-         sp:transaction.SuggestedParams = algod.suggested_params()
+    def closeChannel(self,secret=None):
+         sp:transaction.SuggestedParams = self.algod.suggested_params()
          
+         if(secret==None):
+            secret= bytes(32)
       
-         signer = AccountTransactionSigner(algod.private)
+         signer = AccountTransactionSigner(self.algod.private)
          atc = AtomicTransactionComposer()
         
          atc.add_method_call(
              app_id=self.app_id,
              method = self.contract.get_method_by_name("closeChannel"),
-             sender=algod.address,
+             sender=self.algod.address,
              sp=sp,
              signer=signer,
              method_args=[secret],
-             accounts=[algod.address,self.counterpart]
+             accounts=[self.algod.address,self.counterpart]
 
          )
 
-         result = atc.execute(algod,4)
+         result = atc.execute(self.algod,4)
 
          #Delete Transaction
-         """ deletetx = transaction.ApplicationDeleteTxn(algod.address,sp,self.app_id)
-         signed =deletetx.sign(algod.private)
-         txid = algod.send_transaction(signed)
+         """ deletetx = transaction.ApplicationDeleteTxn(self.algod.address,sp,self.app_id)
+         signed =deletetx.sign(self.algod.private)
+         txid = self.algod.send_transaction(signed)
          result = transaction.wait_for_confirmation(algod, txid, 4) """
 
 

@@ -1,0 +1,428 @@
+#pragma version 7
+txn NumAppArgs
+int 0
+==
+bnz main_l10
+txna ApplicationArgs 0
+method "open_channel(pay)void"
+==
+bnz main_l9
+txna ApplicationArgs 0
+method "deposit(pay)void"
+==
+bnz main_l8
+txna ApplicationArgs 0
+method "tryClose(byte[])void"
+==
+bnz main_l7
+txna ApplicationArgs 0
+method "closeChannel(byte[])void"
+==
+bnz main_l6
+err
+main_l6:
+txn OnCompletion
+int NoOp
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+txna ApplicationArgs 1
+store 3
+load 3
+callsub closeChannel_3
+int 1
+return
+main_l7:
+txn OnCompletion
+int NoOp
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+txna ApplicationArgs 1
+store 2
+load 2
+callsub tryClose_2
+int 1
+return
+main_l8:
+txn OnCompletion
+int NoOp
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+txn GroupIndex
+int 1
+-
+store 1
+load 1
+gtxns TypeEnum
+int pay
+==
+assert
+load 1
+callsub deposit_1
+int 1
+return
+main_l9:
+txn OnCompletion
+int NoOp
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+txn GroupIndex
+int 1
+-
+store 0
+load 0
+gtxns TypeEnum
+int pay
+==
+assert
+load 0
+callsub openchannel_0
+int 1
+return
+main_l10:
+txn OnCompletion
+int NoOp
+==
+bnz main_l14
+txn OnCompletion
+int DeleteApplication
+==
+bnz main_l13
+err
+main_l13:
+byte "deleting"
+app_global_get
+int 1
+==
+assert
+byte "addA"
+app_global_get
+txn Sender
+==
+byte "addB"
+app_global_get
+txn Sender
+==
+||
+assert
+int 1
+return
+main_l14:
+int 1
+return
+
+// open_channel
+openchannel_0:
+store 4
+byte "addA"
+txna Accounts 1
+app_global_put
+byte "ammA"
+int 0
+app_global_put
+byte "addB"
+txna Accounts 2
+app_global_put
+byte "ammB"
+int 0
+app_global_put
+byte "flag"
+int 0
+app_global_put
+byte "deleting"
+int 0
+app_global_put
+load 4
+gtxns Receiver
+global CurrentApplicationAddress
+==
+assert
+int 1
+return
+
+// deposit
+deposit_1:
+store 5
+load 5
+gtxns Receiver
+global CurrentApplicationAddress
+==
+assert
+load 5
+gtxns Sender
+byte "addA"
+app_global_get
+==
+load 5
+gtxns Sender
+byte "addB"
+app_global_get
+==
+||
+assert
+load 5
+gtxns Sender
+byte "addA"
+app_global_get
+==
+bnz deposit_1_l2
+byte "ammB"
+byte "ammB"
+app_global_get
+load 5
+gtxns Amount
++
+app_global_put
+int 1
+return
+deposit_1_l2:
+byte "ammA"
+byte "ammA"
+app_global_get
+load 5
+gtxns Amount
++
+app_global_put
+int 1
+return
+
+// tryClose
+tryClose_2:
+store 6
+load 6
+extract 2 0
+int 0
+load 6
+extract 2 0
+len
+int 128
+-
+extract3
+load 6
+extract 2 0
+extract 88 64
+byte "addA"
+app_global_get
+ed25519verify_bare
+load 6
+extract 2 0
+int 0
+load 6
+extract 2 0
+len
+int 128
+-
+extract3
+load 6
+extract 2 0
+extract 152 64
+byte "addB"
+app_global_get
+ed25519verify_bare
+&&
+int 1
+==
+assert
+load 6
+extract 2 0
+extract 8 8
+btoi
+load 6
+extract 2 0
+extract 16 8
+btoi
++
+store 7
+load 7
+byte "ammA"
+app_global_get
+byte "AmmB"
+app_global_get
++
+==
+assert
+byte "ammA"
+load 6
+extract 2 0
+extract 8 8
+btoi
+app_global_put
+byte "ammB"
+load 6
+extract 2 0
+extract 16 8
+btoi
+app_global_put
+byte "index"
+load 6
+extract 2 0
+extract 0 8
+btoi
+app_global_put
+byte "secretProposer"
+load 6
+extract 2 0
+extract 56 32
+app_global_put
+byte "secret"
+load 6
+extract 2 0
+extract 24 32
+app_global_put
+byte "secretProposer"
+app_global_get
+byte "addA"
+app_global_get
+==
+bnz tryClose_2_l2
+byte "revocationSubmitter"
+byte "addA"
+app_global_get
+app_global_put
+b tryClose_2_l3
+tryClose_2_l2:
+byte "revocationSubmitter"
+byte "addB"
+app_global_get
+app_global_put
+tryClose_2_l3:
+byte "futureAccept"
+global Round
+int 1
++
+app_global_put
+byte "flag"
+int 1
+app_global_put
+int 1
+return
+
+// closeChannel
+closeChannel_3:
+store 8
+byte "flag"
+app_global_get
+int 1
+==
+assert
+byte "deleting"
+int 1
+app_global_put
+txn Sender
+byte "secretProposer"
+app_global_get
+==
+bnz closeChannel_3_l5
+closeChannel_3_l1:
+txn Sender
+byte "revocationSubmitter"
+app_global_get
+==
+bz closeChannel_3_l6
+byte "secret_gived"
+load 8
+extract 2 0
+app_global_put
+load 8
+extract 2 0
+byte "secret"
+app_global_get
+==
+bnz closeChannel_3_l4
+itxn_begin
+global CurrentApplicationAddress
+itxn_field Sender
+int pay
+itxn_field TypeEnum
+byte "ammA"
+app_global_get
+int 998000
++
+itxn_field Amount
+byte "addA"
+app_global_get
+itxn_field Receiver
+itxn_submit
+itxn_begin
+global CurrentApplicationAddress
+itxn_field Sender
+int pay
+itxn_field TypeEnum
+byte "ammB"
+app_global_get
+itxn_field Amount
+byte "addB"
+app_global_get
+itxn_field Receiver
+itxn_submit
+b closeChannel_3_l6
+closeChannel_3_l4:
+byte "IMHERE"
+int 1
+app_global_put
+itxn_begin
+global CurrentApplicationAddress
+itxn_field Sender
+int pay
+itxn_field TypeEnum
+byte "ammA"
+app_global_get
+byte "ammB"
+app_global_get
++
+itxn_field Amount
+byte "revocationSubmitter"
+app_global_get
+itxn_field Receiver
+itxn_submit
+b closeChannel_3_l6
+closeChannel_3_l5:
+global Round
+byte "futureAccept"
+app_global_get
+>
+assert
+itxn_begin
+global CurrentApplicationAddress
+itxn_field Sender
+int pay
+itxn_field TypeEnum
+byte "ammA"
+app_global_get
+int 998000
++
+itxn_field Amount
+byte "addA"
+app_global_get
+itxn_field Receiver
+itxn_submit
+itxn_begin
+global CurrentApplicationAddress
+itxn_field Sender
+int pay
+itxn_field TypeEnum
+byte "ammB"
+app_global_get
+itxn_field Amount
+byte "addB"
+app_global_get
+itxn_field Receiver
+itxn_submit
+b closeChannel_3_l1
+closeChannel_3_l6:
+retsub

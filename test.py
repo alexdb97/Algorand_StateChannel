@@ -43,20 +43,15 @@ c2.insert_channel(contract,appid,appaddr,address)
 
 #First stage sendtransaction
 txs=c1.send(address2,100,deposit=True,create=True)
-
 c2.receive(address,txs,signed=False)
-
 txs=c2.send(address)
-
 c1.receive(address2,txs,signed=True)
-
-
 c1.deposit(100,address2)
 
 
-
+#Secret exhanged
 c1.presentation(address2)
-c2.close_channel(address)
+c2.close_channel(address,0)
 
 
 
