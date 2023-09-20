@@ -1,5 +1,6 @@
 from MyTransaction import MyTransaction
-
+import secrets
+import hashlib
 
 class OffChainBalance():
 
@@ -11,8 +12,9 @@ class OffChainBalance():
     and the current balance.
     """ 
 
-
-    def __init__(self,address1,address2) -> None:
+    def __init__(self,algod,address1,address2) -> None:
+        self.secrets = []
+        self.algod=algod
         self.transactions = []
         self.address1 = address1
         self.address2 = address2
@@ -29,19 +31,25 @@ class OffChainBalance():
     :param algod: an istance of the client is passed for validating the transaction and discriminate the balance
     :param value: the amount of money that is inserted inside the balance
     """ 
-    def deposit_transaction(self,algod,value):
-        
-        if(algod.address==self.address1):
+    def deposit_transaction(self,value):
+        hash = hashlib.sha3_256()
+        random_bytes = secrets.token_bytes(32)
+        hash.update(random_bytes)
+        digest = hash.digest()
+        self.secrets.append(random_bytes)
+  
+
+        if(self.algod.address==self.address1):
             self.amnt1=self.amnt1+value
             self.index=self.index+1
-            tx= MyTransaction(self.index,self.address1,self.address2,self.amnt1,self.amnt2,10,self.address1)
-            tx.sign(algod.signer,self.address1)
+            tx= MyTransaction(self.index,self.address1,self.address2,self.amnt1,self.amnt2,digest,self.address1)
+            tx.sign(self.algod.signer,self.address1)
             return tx.serialize()
         else:
             self.amnt2=self.amnt2+self.amnt2
             self.index=self.index+1
-            tx= MyTransaction(self.index,self.address1,self.address2,self.amnt1,self.amnt2,10,self.address2)
-            tx.sign(algod.signer,self.address2)
+            tx= MyTransaction(self.index,self.address1,self.address2,self.amnt1,self.amnt2,digest,self.address2)
+            tx.sign(self.algod.signer,self.address2)
             return tx.serialize()
             
 
@@ -51,19 +59,25 @@ class OffChainBalance():
     :param algod: an istance of the client is passed for validating the transaction and discriminate the balance
     :param value: the amount of money that is inserted inside the balance
     """ 
-    def create_transaction(self,algod,address,value):
-        
-        if(algod.address==self.address1):
+    def create_transaction(self,value):
+        hash = hashlib.sha3_256()
+        random_bytes = secrets.token_bytes(32)
+        hash.update(random_bytes)
+        digest = hash.digest()
+        self.secrets.append(random_bytes)
+
+    
+        if(self.algod.address==self.address1):
             if(self.amnt1>value):
                 self.index=self.index+1
-                tx = MyTransaction(self.index,self.address1,self.address2,self.amnt1-value,self.amnt2+value,10,self.address1)
-                tx.sign(algod.signer,self.address1)
+                tx = MyTransaction(self.index,self.address1,self.address2,self.amnt1-value,self.amnt2+value,digest,self.address1)
+                tx.sign(self.algod.signer,self.address1)
                 return tx.serialize()
         else:
              if(self.amnt2>value):
                 self.index=self.index+1
-                tx = MyTransaction(self.index,self.address1,self.address2,self.amnt1+value,self.amnt2-value,10,self.address2)
-                tx.sign(algod.signer,self.address2)
+                tx = MyTransaction(self.index,self.address1,self.address2,self.amnt1+value,self.amnt2-value,digest,self.address2)
+                tx.sign(self.algod.signer,self.address2)
                 return tx.serialize()
 
 
@@ -73,11 +87,11 @@ class OffChainBalance():
     :param algod: an istance of the client is passed for validating the transaction
     :param json_tx: json format of the transaction
     """ 
-    def sign_transaction(self,algod,json_tx):
+    def sign_transaction(self,json_tx):
         #Chek all the parameter
         tx = MyTransaction()
         tx.deserialize(json_tx)
-        tx.sign(algod.signer,algod.address)
+        tx.sign(self.algod.signer,self.algod.address)
         return tx.serialize()
 
         
@@ -97,19 +111,34 @@ class OffChainBalance():
 
 
     """
-    get_transaction will retrive from the list of the transaction the last transaction inserted, if index is specified it will
+    get_transaction will return the last transaction inserted from the list of the transaction, if index is specified it will
 
-    retrive the transaction at the position given.
+    return the transaction at the position given.
 
-    :param index: position of the transaction to retrive
+    :param index: position 
     """
-    def get_transaction(self, index=None):
-        try:
-            index = index or len(self.transactions)-1  # Use 0 as the default index if index is None or falsy
-            tx: MyTransaction = self.transactions.pop(index)
-            return tx
-        except (IndexError):
-            raise ValueError("Index is out of range or None for self.transactions.")
+    def get_transaction(self, index=-1):
 
+        tx: MyTransaction = self.transactions[index]
+        return tx
 
+    
+    """
+    get_secret will return the last secret inserted from the list of secrets, if index is specified it will
+
+    return the secret at the position given.
+
+    :param index: position 
+    """
+    def get_secret(self,index=-1):
+        return self.secrets[index]
+    
+    """
+    insert_secret will append to the list of secrets the last one.
+
+    :param  secret: secret
+    """
+    def insert_secret(self,secret):
+        self.secrets.append(secret)
+   
 

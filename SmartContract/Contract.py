@@ -75,6 +75,7 @@ def deposit(pay:abi.PaymentTransaction):
                 )
 
 
+
 @router.method
 def tryClose(msg:abi.DynamicBytes):
     
@@ -85,10 +86,10 @@ def tryClose(msg:abi.DynamicBytes):
     index = Btoi(Extract(enc,Int(0),Int(8)))
     amnt1 = Btoi(Extract(enc,Int(8),Int(8)))
     amnt2 = Btoi(Extract(enc,Int(16),Int(8)))
-    secret = Btoi(Extract(enc,Int(24),Int(8)))
-    secret_proposer = Extract(enc,Int(32),Int(32))
-    signature1 = Extract(enc,Int(64),Int(64))
-    signature2 = Extract(enc,Int(128),Int(64))
+    secret = Extract(enc,Int(24),Int(32))
+    secret_proposer = Extract(enc,Int(56),Int(32))
+    signature1 = Extract(enc,Int(88),Int(64))
+    signature2 = Extract(enc,Int(152),Int(64))
     body = Extract(enc,Int(0),Len(enc)-Int(128))
 
     #Signature verify
@@ -133,7 +134,7 @@ def tryClose(msg:abi.DynamicBytes):
 
 
 @router.method
-def closeChannel(secret:abi.Uint64):
+def closeChannel(secret:abi.DynamicBytes):
   
     addA = App.globalGet(Bytes("addA"))
     addB = App.globalGet(Bytes("addB"))
@@ -148,15 +149,18 @@ def closeChannel(secret:abi.Uint64):
         App.globalPut(Bytes("deleting"),Int(1)),
         #Secret Proposer try to close the channel
         If(Txn.sender()==App.globalGet(Bytes("secretProposer")), Seq(
-                #Assert(Gt(Global.round(),App.globalGet(Bytes("futureAccept")))),
+                Assert(Gt(Global.round(),App.globalGet(Bytes("futureAccept")))),
                 sendMoney(addA,ammA+BALANCE_CONTRACT),
                 sendMoney(addB,ammB)
                 )),
 
         If(Txn.sender()==revocationsub, Seq(
+                #REMOVE
+                App.globalPut(Bytes("secret_gived"),secret.get()),
                 #Chek revocation secret if it is given
                 If(secret.get()==App.globalGet(Bytes("secret")),
-                        sendMoney(revocationsub,ammA+ammB+BALANCE_CONTRACT),
+                        Seq(App.globalPut(Bytes("IMHERE"),Int(1)),
+                        sendMoney(revocationsub,ammA+ammB),),
                    #Else
                     Seq(
                         sendMoney(addA,ammA+BALANCE_CONTRACT),
@@ -202,9 +206,5 @@ if __name__ == "__main__":
     
     logger.info("All file are compiled")
     
-    
- 
-   
-#This is a comment
 
 

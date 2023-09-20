@@ -34,11 +34,11 @@ class Client(algod.AlgodClient):
             tmp=f.read()
             contract = deserialize(tmp)
 
-        c = ChainChannel(app_clear,app_pro,contract,counterpart)
-        appid,address= c.open_channel(self)
+        c = ChainChannel(self,app_clear,app_pro,contract,counterpart)
+        appid,address= c.open_channel()
         self.opened_channels[counterpart]=c
 
-        o = OffChainBalance(self.address,counterpart)
+        o = OffChainBalance(self,self.address,counterpart)
         self.off_channel[counterpart]=o
         
         return contract,appid,address
@@ -46,24 +46,27 @@ class Client(algod.AlgodClient):
 
     def insert_channel(self,contract,app_id,app_address,counterpart):
         #Verify the state of the channel and the code of it is a part that will come later
-        c = ChainChannel(contract=contract,app_id=app_id,app_address=app_address,counterpart=counterpart)
+        c = ChainChannel(self,contract=contract,app_id=app_id,app_address=app_address,counterpart=counterpart)
         self.opened_channels[counterpart]=c
-        o = OffChainBalance(counterpart,self.address)
+        o = OffChainBalance(self,counterpart,self.address)
         self.off_channel[counterpart]=o
 
     def deposit(self,value,counterpart):
         c:ChainChannel =self.opened_channels[counterpart]
-        c.deposit_chain(value,self)
+        c.deposit_chain(value)
         off:OffChainBalance = self.off_channel[counterpart]
         
 
     def presentation(self,address,transaction=None):
         c:ChainChannel = self.opened_channels[address]
-        c.tryClose(self.off_channel[address].get_transaction().get_contract_payload(),self)
+        c.tryClose(self.off_channel[address].get_transaction().contract_payload())
     
-    def close_channel(self,address,value=0):
+    def close_channel(self,address,secret=None):
         c:ChainChannel = self.opened_channels[address]
-        c.closeChannel(self,value)
+        if(secret!=None):
+            secret = self.off_channel[address].get_secret(secret)
+      
+        c.closeChannel(secret)
     
     #------------------------------------------------------------------------------------------    
 
@@ -76,9 +79,9 @@ class Client(algod.AlgodClient):
         #If it is a new transaction
         if create:
             if deposit:
-                json_tx =offc.deposit_transaction(self,value)
+                json_tx =offc.deposit_transaction(value)
                 return json_tx
-            json_tx = offc.create_transaction(self,counterpart,value)
+            json_tx = offc.create_transaction(value)
             return json_tx
         
         return offc.get_transaction().serialize()
@@ -89,7 +92,16 @@ class Client(algod.AlgodClient):
             
             offc.insert_transaction(tx)
         else:
-            txs = offc.sign_transaction(self,tx)
+            txs = offc.sign_transaction(tx)
             offc.insert_transaction(txs)
+    
+    def send_secret(self,counterpart):
+        offc:OffChainBalance = self.off_channel[counterpart]
+        return offc.get_secret()
+    
+    def receive_secret(self,counterpart,secret):
+        offc:OffChainBalance = self.off_channel[counterpart]
+        offc.insert_secret(secret)
+
 
     #--------------------------------------------------------------------------------------
