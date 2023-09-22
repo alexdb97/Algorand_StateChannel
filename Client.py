@@ -34,7 +34,7 @@ class Client(algod.AlgodClient):
             tmp=f.read()
             contract = deserialize(tmp)
 
-        c = ChainChannel(self,app_clear,app_pro,contract,counterpart)
+        c = ChainChannel(self,app_clear,app_pro,contract,address1=self.address,address2=counterpart)
         appid,address= c.open_channel()
         self.opened_channels[counterpart]=c
 
@@ -46,7 +46,7 @@ class Client(algod.AlgodClient):
 
     def insert_channel(self,contract,app_id,app_address,counterpart):
         #Verify the state of the channel and the code of it is a part that will come later
-        c = ChainChannel(self,contract=contract,app_id=app_id,app_address=app_address,counterpart=counterpart)
+        c = ChainChannel(self,contract=contract,app_id=app_id,app_address=app_address,address1=counterpart,address2=self.address)
         self.opened_channels[counterpart]=c
         o = OffChainBalance(self,counterpart,self.address)
         self.off_channel[counterpart]=o
@@ -57,17 +57,24 @@ class Client(algod.AlgodClient):
         off:OffChainBalance = self.off_channel[counterpart]
         
 
-    def presentation(self,address,transaction=None):
-        c:ChainChannel = self.opened_channels[address]
-        c.tryClose(self.off_channel[address].get_transaction().contract_payload())
+    def presentation(self,counterpart,transaction=None):
+        c:ChainChannel = self.opened_channels[counterpart]
+        c.tryClose(self.off_channel[counterpart].get_transaction().contract_payload())
     
-    def close_channel(self,address,secret=None):
-        c:ChainChannel = self.opened_channels[address]
+    def close_channel(self,counterpart,secret=None):
+        c:ChainChannel = self.opened_channels[counterpart]
         if(secret!=None):
-            secret = self.off_channel[address].get_secret(secret)
+            secret = self.off_channel[counterpart].get_secret(secret)
       
         c.closeChannel(secret)
     
+    def delete(self,counterpart):
+        c:ChainChannel = self.opened_channels[counterpart]
+        c.delete()
+        self.opened_channels.pop(counterpart)
+        self.off_channel.pop(counterpart)
+
+
     #------------------------------------------------------------------------------------------    
 
 

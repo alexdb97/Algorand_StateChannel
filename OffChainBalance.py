@@ -43,13 +43,13 @@ class OffChainBalance():
             self.amnt1=self.amnt1+value
             self.index=self.index+1
             tx= MyTransaction(self.index,self.address1,self.address2,self.amnt1,self.amnt2,digest,self.address1)
-            tx.sign(self.algod.signer,self.address1)
+            tx.sign(self.algod.signer,self.algod.address)
             return tx.serialize()
         else:
-            self.amnt2=self.amnt2+self.amnt2
+            self.amnt2=self.amnt2+value
             self.index=self.index+1
             tx= MyTransaction(self.index,self.address1,self.address2,self.amnt1,self.amnt2,digest,self.address2)
-            tx.sign(self.algod.signer,self.address2)
+            tx.sign(self.algod.signer,self.algod.address)
             return tx.serialize()
             
 

@@ -21,13 +21,14 @@ class ChainChannel() :
 
     """ 
     
-    def __init__(self,algod,clear=None,app=None,contract=None,counterpart=None,app_id=None,app_address=None):
+    def __init__(self,algod,clear=None,app=None,contract=None,app_id=None,app_address=None,address1=None,address2=None):
         
         self.algod=algod
         self.app_teal = app
         self.clear_teal = clear
         self.contract:abi.Contract = contract
-        self.counterpart = counterpart
+        self.address1=address1
+        self.address2=address2
         self.app_id = app_id
         self.app_address = app_address
         
@@ -82,7 +83,7 @@ class ChainChannel() :
             sender=self.algod.address,
             sp=sp,
             signer=signer,
-            accounts=[self.algod.address,self.counterpart],
+            accounts=[self.address1,self.address2],
             method_args=[tws],
         )
 
@@ -177,18 +178,19 @@ class ChainChannel() :
              sp=sp,
              signer=signer,
              method_args=[digest],
-             accounts=[self.algod.address,self.counterpart]
+             accounts=[self.address1,self.address2]
 
          )
 
          result = atc.execute(self.algod,4)
 
          #Delete Transaction
-         """ deletetx = transaction.ApplicationDeleteTxn(self.algod.address,sp,self.app_id)
-         signed =deletetx.sign(self.algod.private)
-         txid = self.algod.send_transaction(signed)
-         result = transaction.wait_for_confirmation(algod, txid, 4) """
+         
 
-
-         def get_info_contract():
-             pass
+    def delete(self):
+        sp:transaction.SuggestedParams = self.algod.suggested_params()
+        deletetx = transaction.ApplicationDeleteTxn(self.algod.address,sp,self.app_id)
+        signed =deletetx.sign(self.algod.private)
+        txid = self.algod.send_transaction(signed)
+        result = transaction.wait_for_confirmation(self.algod, txid, 4)
+        

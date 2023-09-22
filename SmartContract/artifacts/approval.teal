@@ -248,12 +248,14 @@ extract 16 8
 btoi
 +
 store 7
-load 7
 byte "ammA"
 app_global_get
-byte "AmmB"
+byte "ammB"
 app_global_get
 +
+store 8
+load 7
+load 8
 ==
 assert
 byte "ammA"
@@ -314,7 +316,7 @@ return
 
 // closeChannel
 closeChannel_3:
-store 8
+store 9
 byte "flag"
 app_global_get
 int 1
@@ -335,10 +337,10 @@ app_global_get
 ==
 bz closeChannel_3_l6
 byte "secret_gived"
-load 8
+load 9
 extract 2 0
 app_global_put
-load 8
+load 9
 extract 2 0
 byte "secret"
 app_global_get
@@ -392,11 +394,6 @@ itxn_field Receiver
 itxn_submit
 b closeChannel_3_l6
 closeChannel_3_l5:
-global Round
-byte "futureAccept"
-app_global_get
->
-assert
 itxn_begin
 global CurrentApplicationAddress
 itxn_field Sender

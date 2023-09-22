@@ -80,7 +80,7 @@ def deposit(pay:abi.PaymentTransaction):
 def tryClose(msg:abi.DynamicBytes):
     
     app = ScratchVar(TealType.uint64)
-
+    app2 = ScratchVar(TealType.uint64)
     #Parsing Payload and extract attributes
     enc = msg.get()
     index = Btoi(Extract(enc,Int(0),Int(8)))
@@ -99,7 +99,8 @@ def tryClose(msg:abi.DynamicBytes):
 
     #Verification of amount, the balance proposed with the transaction must fit with the balance of the smart contract
     verification_amount = Seq(app.store(amnt1+amnt2),
-                              Assert((app.load())==App.globalGet(Bytes("ammA"))+App.globalGet(Bytes("AmmB"))),)
+                              app2.store(App.globalGet(Bytes("ammA"))+App.globalGet(Bytes("ammB"))),
+                              Assert((app.load())==app2.load()),)
   
 
       
@@ -149,7 +150,7 @@ def closeChannel(secret:abi.DynamicBytes):
         App.globalPut(Bytes("deleting"),Int(1)),
         #Secret Proposer try to close the channel
         If(Txn.sender()==App.globalGet(Bytes("secretProposer")), Seq(
-                Assert(Gt(Global.round(),App.globalGet(Bytes("futureAccept")))),
+                #Assert(Gt(Global.round(),App.globalGet(Bytes("futureAccept")))),
                 sendMoney(addA,ammA+BALANCE_CONTRACT),
                 sendMoney(addB,ammB)
                 )),
