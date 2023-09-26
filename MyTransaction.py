@@ -45,9 +45,6 @@ class MyTransaction():
     """ 
     def sign(self,signer,address):
 
-        if(self.signature.count(None)==0):
-            raise TooManySignerException()
-
         b64_pk = cast(AccountTransactionSigner,signer).private_key
         msg = bytes(self.__body_to_bytearray())
         pk = list(base64.b64decode(b64_pk))
@@ -151,9 +148,5 @@ class MyTransaction():
         
 
  
-class TooManySignerException(Exception):
-    def __init__(self, message, errors):            
-        # Call the base class constructor with the parameters it needs
-        super().__init__(message)
 
         

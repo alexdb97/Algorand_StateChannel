@@ -118,7 +118,6 @@ class OffChainBalance():
     :param index: position 
     """
     def get_transaction(self, index=-1):
-
         tx: MyTransaction = self.transactions[index]
         return tx
 

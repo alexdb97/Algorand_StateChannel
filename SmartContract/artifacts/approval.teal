@@ -305,7 +305,7 @@ app_global_put
 tryClose_2_l3:
 byte "futureAccept"
 global Round
-int 1
+int 2
 +
 app_global_put
 byte "flag"
@@ -336,10 +336,6 @@ byte "revocationSubmitter"
 app_global_get
 ==
 bz closeChannel_3_l6
-byte "secret_gived"
-load 9
-extract 2 0
-app_global_put
 load 9
 extract 2 0
 byte "secret"
@@ -374,9 +370,6 @@ itxn_field Receiver
 itxn_submit
 b closeChannel_3_l6
 closeChannel_3_l4:
-byte "IMHERE"
-int 1
-app_global_put
 itxn_begin
 global CurrentApplicationAddress
 itxn_field Sender
@@ -387,6 +380,10 @@ app_global_get
 byte "ammB"
 app_global_get
 +
+int 998000
++
+int 1000
++
 itxn_field Amount
 byte "revocationSubmitter"
 app_global_get
@@ -394,6 +391,11 @@ itxn_field Receiver
 itxn_submit
 b closeChannel_3_l6
 closeChannel_3_l5:
+global Round
+byte "futureAccept"
+app_global_get
+>
+assert
 itxn_begin
 global CurrentApplicationAddress
 itxn_field Sender

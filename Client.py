@@ -57,9 +57,9 @@ class Client(algod.AlgodClient):
         off:OffChainBalance = self.off_channel[counterpart]
         
 
-    def presentation(self,counterpart,transaction=None):
+    def presentation(self,counterpart,transaction=-1):
         c:ChainChannel = self.opened_channels[counterpart]
-        c.tryClose(self.off_channel[counterpart].get_transaction().contract_payload())
+        c.tryClose(self.off_channel[counterpart].get_transaction(transaction).contract_payload())
     
     def close_channel(self,counterpart,secret=None):
         c:ChainChannel = self.opened_channels[counterpart]
@@ -110,5 +110,6 @@ class Client(algod.AlgodClient):
         offc:OffChainBalance = self.off_channel[counterpart]
         offc.insert_secret(secret)
 
+    
 
     #--------------------------------------------------------------------------------------

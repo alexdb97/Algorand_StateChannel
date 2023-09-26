@@ -127,7 +127,7 @@ def tryClose(msg:abi.DynamicBytes):
                 #Update secret mechanism
                 handle_secret,
                 #Set the lock on time accept (futureAccept) + delta
-                App.globalPut(Bytes("futureAccept"),Global.round()+Int(1)),
+                App.globalPut(Bytes("futureAccept"),Global.round()+Int(2)),
                 #Update the flag to 1
                 App.globalPut(Bytes("flag"),Int(1)),
                 Approve()
@@ -150,18 +150,16 @@ def closeChannel(secret:abi.DynamicBytes):
         App.globalPut(Bytes("deleting"),Int(1)),
         #Secret Proposer try to close the channel
         If(Txn.sender()==App.globalGet(Bytes("secretProposer")), Seq(
-                #Assert(Gt(Global.round(),App.globalGet(Bytes("futureAccept")))),
+                Assert(Gt(Global.round(),App.globalGet(Bytes("futureAccept")))),
                 sendMoney(addA,ammA+BALANCE_CONTRACT),
                 sendMoney(addB,ammB)
                 )),
 
         If(Txn.sender()==revocationsub, Seq(
-                #REMOVE
-                App.globalPut(Bytes("secret_gived"),secret.get()),
                 #Chek revocation secret if it is given
                 If(secret.get()==App.globalGet(Bytes("secret")),
-                        Seq(App.globalPut(Bytes("IMHERE"),Int(1)),
-                        sendMoney(revocationsub,ammA+ammB),),
+                        #Give all the money inside the contract + Balance_contract +1000 as there is only one transaction
+                        sendMoney(revocationsub,ammA+ammB+BALANCE_CONTRACT+Int(1000)),
                    #Else
                     Seq(
                         sendMoney(addA,ammA+BALANCE_CONTRACT),
