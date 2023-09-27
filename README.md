@@ -9,6 +9,6 @@ After installed pip it is foundamental to install pipx (https://github.com/pypa/
 The second step is to install Algokit, it is a tool that creates a local isolated Algorand Network so is it possible to simulate real transactions and Smart Contract execution on your computer it is done using the command ```pipx install algokit``` verify the installation typing  ``` algokit --version```.
 
 # Code execution 
-For the execution of the code is suggested to install all the libraries in a virtual environment (venv), after creating the venv you can install all the package listed inside the file requirements.txt
-```python3 -m venv venv```
-```pip -r requirements.txt```
+For the execution of the code is suggested to install all the libraries in a virtual environment (venv), after creating the venv ```python3 -m venv venv``` and activated it ```source venv/bin/activate``` you can install all the package listed inside the requirements file ```pip install -r requirements.txt```
+
+
