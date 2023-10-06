@@ -43,8 +43,8 @@ class Client(algod.AlgodClient):
         
         return contract,appid,address
 
-
-    def insert_channel(self,contract,app_id,app_address,counterpart):
+    #JOIN CHANNEL to change
+    def join_channel(self,contract,app_id,app_address,counterpart):
         #Verify the state of the channel and the code of it is a part that will come later
         c = ChainChannel(self,contract=contract,app_id=app_id,app_address=app_address,address1=counterpart,address2=self.address)
         self.opened_channels[counterpart]=c

@@ -347,12 +347,10 @@ global CurrentApplicationAddress
 itxn_field Sender
 int pay
 itxn_field TypeEnum
-byte "ammA"
+byte "ammB"
 app_global_get
-int 998000
-+
 itxn_field Amount
-byte "addA"
+byte "addB"
 app_global_get
 itxn_field Receiver
 itxn_submit
@@ -361,12 +359,15 @@ global CurrentApplicationAddress
 itxn_field Sender
 int pay
 itxn_field TypeEnum
-byte "ammB"
+byte "ammA"
 app_global_get
 itxn_field Amount
-byte "addB"
+byte "addA"
 app_global_get
 itxn_field Receiver
+byte "addA"
+app_global_get
+itxn_field CloseRemainderTo
 itxn_submit
 b closeChannel_3_l6
 closeChannel_3_l4:
@@ -380,14 +381,13 @@ app_global_get
 byte "ammB"
 app_global_get
 +
-int 998000
-+
-int 1000
-+
 itxn_field Amount
 byte "revocationSubmitter"
 app_global_get
 itxn_field Receiver
+byte "revocationSubmitter"
+app_global_get
+itxn_field CloseRemainderTo
 itxn_submit
 b closeChannel_3_l6
 closeChannel_3_l5:
@@ -401,12 +401,10 @@ global CurrentApplicationAddress
 itxn_field Sender
 int pay
 itxn_field TypeEnum
-byte "ammA"
+byte "ammB"
 app_global_get
-int 998000
-+
 itxn_field Amount
-byte "addA"
+byte "addB"
 app_global_get
 itxn_field Receiver
 itxn_submit
@@ -415,12 +413,15 @@ global CurrentApplicationAddress
 itxn_field Sender
 int pay
 itxn_field TypeEnum
-byte "ammB"
+byte "ammA"
 app_global_get
 itxn_field Amount
-byte "addB"
+byte "addA"
 app_global_get
 itxn_field Receiver
+byte "addA"
+app_global_get
+itxn_field CloseRemainderTo
 itxn_submit
 b closeChannel_3_l1
 closeChannel_3_l6:

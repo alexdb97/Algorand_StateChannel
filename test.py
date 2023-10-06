@@ -47,8 +47,8 @@ class Test(unittest.TestCase):
 
         #This thread is foundamental as in localnet there is no one that does other
         # transactions excepts Alice and Bob the field round that represents the time is blocked
-        # the solution to this is a daemon thread with the third account that does transactions every seconds to itself
-        T=Thread(target=aux_other_client,args=[private_key3,address3,signer3])
+        # the solution to this is a daemon thread with the third account that does transactions every 2 seconds to itself
+        T=Thread(target=aux_other_client,args=[])
         T.daemon=True
         T.start()
 
@@ -68,10 +68,10 @@ class Test(unittest.TestCase):
         amntBob_t1 = account_info.get('amount')
 
         contract,appid,appaddr=self.Alice.open_channel(self.Bob.address) #Cost 2000 microAlgos
-        self.Bob.insert_channel(contract,appid,appaddr,self.Alice.address)
+        self.Bob.join_channel(contract,appid,appaddr,self.Alice.address)
 
 
-        #First step Deposit Transaction, Bob must give a signed transaction - OffChain
+        #First step Deposit Transaction - OffChain
         txs=self.Alice.send(self.Bob.address,100,deposit=True,create=True)
         self.Bob.receive(self.Alice.address,txs,signed=False)
         txs=self.Bob.send(self.Alice.address)
@@ -84,6 +84,11 @@ class Test(unittest.TestCase):
 
         #In this case after the presentation he must wait normally 24h, as we are testing
         #the smart contract it is set 20 seconds on the smart contract
+
+        #If we try a close now we expect an exception
+        with self.assertRaises(Exception):
+            self.Alice.close_channel(self.Bob.address)
+
         time.sleep(10)
         self.Alice.close_channel(self.Bob.address) #cost 1000 microAlgos
         self.Alice.delete(self.Bob.address) #cost 1000 microalgos
@@ -114,22 +119,22 @@ class Test(unittest.TestCase):
         amntBob_t1 = account_info.get('amount')
 
         contract,appid,appaddr=self.Alice.open_channel(self.Bob.address) #Cost 2000 microAlgos
-        self.Bob.insert_channel(contract,appid,appaddr,self.Alice.address)
+        self.Bob.join_channel(contract,appid,appaddr,self.Alice.address)
 
 
         #First step Deposit Transaction, Bob must give a signed transaction - OffChain
-        txs=self.Alice.send(self.Bob.address,100,deposit=True,create=True)
+        txs=self.Alice.send(self.Bob.address,5,deposit=True,create=True)
         self.Bob.receive(self.Alice.address,txs,signed=False)
         txs=self.Bob.send(self.Alice.address)
         self.Alice.receive(self.Bob.address,txs,signed=True)
         #(On chain) deposit
-        self.Alice.deposit(100,self.Bob.address) #cost 2000 microAlgos
+        self.Alice.deposit(5,self.Bob.address) #cost 2000 microAlgos
 
         #Before of the second transaction there will be the phase of secret reveal
         secret=self.Alice.send_secret(self.Bob.address)
         self.Bob.receive_secret(self.Alice.address,secret)
-        #Alice gives 50 algos to Bob
-        txs=self.Alice.send(self.Bob.address,50,create=True)
+        #Alice gives 75 algos to Bob
+        txs=self.Alice.send(self.Bob.address,4,create=True)
         self.Bob.receive(self.Alice.address,txs,signed=False)
         txs=self.Bob.send(self.Alice.address)
         self.Alice.receive(self.Bob.address,txs,signed=True)
@@ -138,7 +143,7 @@ class Test(unittest.TestCase):
         secret=self.Alice.send_secret(self.Bob.address)
         self.Bob.receive_secret(self.Alice.address,secret)
         #Bob gives 25 algos to Alice
-        txs=self.Bob.send(self.Alice.address,25,create=True)
+        txs=self.Bob.send(self.Alice.address,4,create=True)
         self.Alice.receive(self.Bob.address,txs,signed=False)
         txs=self.Alice.send(self.Bob.address)
         self.Bob.receive(self.Alice.address,txs,signed=True)
@@ -160,7 +165,7 @@ class Test(unittest.TestCase):
         account_info: Dict[str, Any] = self.Bob.account_info(self.Bob.address)
         amntBob_t2 = account_info.get('amount')
 
-        assert(amntBob_t2-amntBob_t1==25000000 and amntAlice_t2-amntAlice_t1==-25015000)
+        assert(amntBob_t2-amntBob_t1==0 and amntAlice_t2-amntAlice_t1==-15000)
         
 
 
@@ -178,10 +183,10 @@ class Test(unittest.TestCase):
         amntBob_t1 = account_info.get('amount')
 
         contract,appid,appaddr=self.Alice.open_channel(self.Bob.address) #Cost 2000 microAlgos
-        self.Bob.insert_channel(contract,appid,appaddr,self.Alice.address)
+        self.Bob.join_channel(contract,appid,appaddr,self.Alice.address)
 
 
-        #First step Deposit Transaction, Alice must give back a signed transaction before opening - OffChain
+        #First step Deposit Transaction - OffChain
         txs=self.Bob.send(self.Alice.address,100,deposit=True,create=True)
         self.Alice.receive(self.Bob.address,txs,signed=False)
         txs=self.Alice.send(self.Bob.address)
@@ -192,7 +197,7 @@ class Test(unittest.TestCase):
         #Before of the second transaction there will be the phase of secret reveal
         secret=self.Bob.send_secret(self.Alice.address)
         self.Alice.receive_secret(self.Bob.address,secret)
-        #Alice gives 50 algos to Bob
+        #Bob sends 50 Alice
         txs=self.Bob.send(self.Alice.address,50,create=True)
         self.Alice.receive(self.Bob.address,txs,signed=False)
         txs=self.Alice.send(self.Bob.address)
@@ -201,7 +206,7 @@ class Test(unittest.TestCase):
         #Before of the transaction there will be the phase of secret reveal
         secret=self.Bob.send_secret(self.Alice.address)
         self.Alice.receive_secret(self.Bob.address,secret)
-        #Bob gives 25 algos to Alice
+        #Alice sends 25 algos to Bob
         txs=self.Alice.send(self.Bob.address,25,create=True)
         self.Bob.receive(self.Alice.address,txs,signed=False)
         txs=self.Bob.send(self.Alice.address)
@@ -213,7 +218,7 @@ class Test(unittest.TestCase):
         # Closing step - OnChain 
         self.Bob.presentation(self.Alice.address,0) #cost 6000 microalgos
 
-        #Alice tries to close the contract should raise the (exception gloabal_round<future_accepts)
+        #Bob tries to close the contract should raise the (exception gloabal_round<future_accepts)
         with self.assertRaises(Exception):
             self.Bob.close_channel(self.Alice.address)
 
@@ -246,7 +251,7 @@ class Test(unittest.TestCase):
         amntBob_t1 = account_info.get('amount')
 
         contract,appid,appaddr=self.Bob.open_channel(self.Alice.address) #Cost 2000 microAlgos
-        self.Alice.insert_channel(contract,appid,appaddr,self.Bob.address)
+        self.Alice.join_channel(contract,appid,appaddr,self.Bob.address)
 
 
         #First step Deposit Transaction, Alice must give back a signed transaction before opening - OffChain

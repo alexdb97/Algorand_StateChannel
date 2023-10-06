@@ -73,7 +73,7 @@ class ChainChannel() :
         atc = AtomicTransactionComposer()
 
         #Put inside  1 algo, it is required for the transactions executed by the smart contract itself
-        tx = transaction.PaymentTxn(self.algod.address,sp=sp,receiver=self.app_address,amt=util.algos_to_microalgos(1))
+        tx = transaction.PaymentTxn(self.algod.address,sp=sp,receiver=self.app_address,amt=1002000)
         tws = TransactionWithSigner(tx,signer)
 
         
@@ -87,7 +87,7 @@ class ChainChannel() :
             method_args=[tws],
         )
 
-        result = atc.execute(self.algod, 10)  # Wait for 10 rounds
+        result = atc.execute(self.algod, 1000)  # Wait for 10 rounds
 
         return self.app_id, self.app_address
 
@@ -124,7 +124,7 @@ class ChainChannel() :
             method_args=[tws]
         )
     
-        group_result =atc.execute(self.algod,2)
+        group_result =atc.execute(self.algod,1000)
         return group_result.abi_results[0]
 
 
@@ -152,7 +152,7 @@ class ChainChannel() :
             tws = TransactionWithSigner(txi,signer)
             atc.add_transaction(tws) 
 
-        group_result = atc.execute(self.algod, 4)
+        group_result = atc.execute(self.algod, 1000)
         return group_result.abi_results[0]
 
 
@@ -182,7 +182,7 @@ class ChainChannel() :
 
          )
 
-         result = atc.execute(self.algod,4)
+         result = atc.execute(self.algod,1000)
 
          #Delete Transaction
          
@@ -192,5 +192,5 @@ class ChainChannel() :
         deletetx = transaction.ApplicationDeleteTxn(self.algod.address,sp,self.app_id)
         signed =deletetx.sign(self.algod.private)
         txid = self.algod.send_transaction(signed)
-        result = transaction.wait_for_confirmation(self.algod, txid, 4)
+        result = transaction.wait_for_confirmation(self.algod, txid, 1000)
         

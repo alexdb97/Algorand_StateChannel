@@ -84,6 +84,7 @@ class MyTransaction():
     :param json_tx: json transaction
     """
     def deserialize(self,str):
+       
         d = json.loads(str)
         attributes = ['index', 'addr1', 'addr2', 'amnt1', 'amnt2', 'secret_proposer']
         for attr in attributes:

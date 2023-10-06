@@ -1,20 +1,33 @@
 from pyteal import *
 import logging 
 
-BALANCE_CONTRACT = Int(998000)
 
 
 '''Ausiliarity function used for sending the ammount of money amm to the address addr
 using the Inner Transaction'''
-def sendMoney(addr,amm):
-    return Seq(
-        InnerTxnBuilder().Begin(),
-        InnerTxnBuilder.SetFields({
+def sendMoney(addr,amm,b=False,addr2=None):
+    if b:
+        return Seq(
+            InnerTxnBuilder().Begin(),
+            InnerTxnBuilder.SetFields({
             TxnField.sender: Global.current_application_address(),
             TxnField.type_enum: TxnType.Payment,
             TxnField.amount: amm,
-            TxnField.receiver: addr}),
+            TxnField.receiver: addr,
+            TxnField.close_remainder_to: addr2
+            }),
         InnerTxnBuilder.Submit())
+    else:
+        return Seq(
+            InnerTxnBuilder().Begin(),
+            InnerTxnBuilder.SetFields({
+            TxnField.sender: Global.current_application_address(),
+            TxnField.type_enum: TxnType.Payment,
+            TxnField.amount: amm,
+            TxnField.receiver: addr,
+            }),
+        InnerTxnBuilder.Submit())
+
 
 
 noop = Approve()
@@ -30,7 +43,7 @@ router = Router("Draft-Channell", BareCallActions(
 
     no_op=OnCompleteAction.always(Approve()),
     update_application=OnCompleteAction.never(),
-    delete_application=OnCompleteAction.always(handle_delete)
+    delete_application=OnCompleteAction.always(handle_delete)  
     ))
 
 
@@ -41,6 +54,7 @@ def open_channel(pay:abi.PaymentTransaction):
     
     handle_creation= Seq(
         #Initialize all the variables
+        
         App.globalPut(Bytes("addA"),Txn.accounts[1]),
         App.globalPut(Bytes("ammA"),Int(0)),
         App.globalPut(Bytes("addB"),Txn.accounts[2]),
@@ -151,19 +165,22 @@ def closeChannel(secret:abi.DynamicBytes):
         #Secret Proposer try to close the channel
         If(Txn.sender()==App.globalGet(Bytes("secretProposer")), Seq(
                 Assert(Gt(Global.round(),App.globalGet(Bytes("futureAccept")))),
-                sendMoney(addA,ammA+BALANCE_CONTRACT),
-                sendMoney(addB,ammB)
+                sendMoney(addB,ammB),
+                sendMoney(addA,ammA,True,addA),
+                
                 )),
 
         If(Txn.sender()==revocationsub, Seq(
                 #Chek revocation secret if it is given
                 If(secret.get()==App.globalGet(Bytes("secret")),
                         #Give all the money inside the contract + Balance_contract +1000 as there is only one transaction
-                        sendMoney(revocationsub,ammA+ammB+BALANCE_CONTRACT+Int(1000)),
+                        sendMoney(revocationsub,ammA+ammB,True,revocationsub),
                    #Else
                     Seq(
-                        sendMoney(addA,ammA+BALANCE_CONTRACT),
                         sendMoney(addB,ammB),
+                        sendMoney(addA,ammA,True,addA),
+                        
+                        
                          )))
         ),
        )

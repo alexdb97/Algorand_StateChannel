@@ -12,9 +12,8 @@ from utilites.util import get_accounts, get_algod_client
 sent to the local blockcahin we need a function that loops and does trivial transaction
 
 '''
-def aux_other_client(pk,addr,sign):
+def aux_other_client():
 
-    
 
     #Create a new algod client, configured to connect to our local sandbox
     algod_address= "http://localhost:4001"
@@ -23,8 +22,7 @@ def aux_other_client(pk,addr,sign):
 
     # Create a new client with an alternate api key header
     special_algod_client = algod.AlgodClient(
-    "", algod_address, headers={"X-API-Key": algod_token}
-    )
+    "", algod_address, headers={"X-API-Key": algod_token})
 
     #example: ALGOD_CREATE_CLIENT
     algod_client = get_algod_client()
@@ -43,5 +41,5 @@ def aux_other_client(pk,addr,sign):
         tx = transaction.PaymentTxn(address,sp=sp,receiver=address,amt=util.algos_to_microalgos(1))
         txs = tx.sign(private_key)
         algod_client.send_transaction(txs)
-        time.sleep(1)
+        time.sleep(3)
         count = count+1

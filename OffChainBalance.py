@@ -27,8 +27,6 @@ class OffChainBalance():
     """
     deposit_transaction, is the first transaction that will fill the current balance.
 
-
-    :param algod: an istance of the client is passed for validating the transaction and discriminate the balance
     :param value: the amount of money that is inserted inside the balance
     """ 
     def deposit_transaction(self,value):
@@ -56,7 +54,6 @@ class OffChainBalance():
     """
     create_transaction will check the current balance and create the transaction.
 
-    :param algod: an istance of the client is passed for validating the transaction and discriminate the balance
     :param value: the amount of money that is inserted inside the balance
     """ 
     def create_transaction(self,value):
@@ -68,13 +65,13 @@ class OffChainBalance():
 
     
         if(self.algod.address==self.address1):
-            if(self.amnt1>value):
+            if(self.amnt1>=value):
                 self.index=self.index+1
                 tx = MyTransaction(self.index,self.address1,self.address2,self.amnt1-value,self.amnt2+value,digest,self.address1)
                 tx.sign(self.algod.signer,self.address1)
                 return tx.serialize()
         else:
-             if(self.amnt2>value):
+             if(self.amnt2>=value):
                 self.index=self.index+1
                 tx = MyTransaction(self.index,self.address1,self.address2,self.amnt1+value,self.amnt2-value,digest,self.address2)
                 tx.sign(self.algod.signer,self.address2)
@@ -84,7 +81,6 @@ class OffChainBalance():
     """
     sign_transaction will sign the transaction provided
 
-    :param algod: an istance of the client is passed for validating the transaction
     :param json_tx: json format of the transaction
     """ 
     def sign_transaction(self,json_tx):
