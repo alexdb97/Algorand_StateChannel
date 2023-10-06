@@ -36,7 +36,7 @@ with open("/home/ale/Desktop/Access/token.txt") as fd:
     algod_token=file.replace('\n','')
     fd.close()
 
-#algod_token = "bZbXNYpcwa6gEAFq20RpZ341qt6IdNn9IzVuEFJj"
+
 algod_url = "https://testnet-algorand.api.purestake.io/ps2"
 
 
