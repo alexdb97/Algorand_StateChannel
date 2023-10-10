@@ -101,7 +101,7 @@ def tryClose(msg:abi.DynamicBytes):
     amnt1 = Btoi(Extract(enc,Int(8),Int(8)))
     amnt2 = Btoi(Extract(enc,Int(16),Int(8)))
     secret = Extract(enc,Int(24),Int(32))
-    secret_proposer = Extract(enc,Int(56),Int(32))
+    secret2 = Extract(enc,Int(56),Int(32))
     signature1 = Extract(enc,Int(88),Int(64))
     signature2 = Extract(enc,Int(152),Int(64))
     body = Extract(enc,Int(0),Len(enc)-Int(128))
@@ -119,12 +119,19 @@ def tryClose(msg:abi.DynamicBytes):
 
       
     #Update Secret Proposer and Revocation submitter
-    handle_secret = Seq(App.globalPut(Bytes("secretProposer"),secret_proposer),
-                        App.globalPut(Bytes("secret"),secret),
-                        If(App.globalGet(Bytes("secretProposer"))==App.globalGet(Bytes("addA")),
+    handle_secret = Seq(App.globalPut(Bytes("secretProposer"),Txn.sender()),
+                        
+                        If(Txn.sender()==App.globalGet(Bytes("addA")),
+                                Seq(
                                 App.globalPut(Bytes("revocationSubmitter"),App.globalGet(Bytes("addB"))),
+                                App.globalPut(Bytes("secret"),secret),
+                                App.globalPut(Bytes("The_other_secret1"),secret2)),
+                                
                         #Else
+                                Seq(
                                 App.globalPut(Bytes("revocationSubmitter"),App.globalGet(Bytes("addA"))),
+                                App.globalPut(Bytes("secret"),secret2),
+                                App.globalPut(Bytes("The_other_secret2"),secret)),
                             )
                         )
     
@@ -171,6 +178,7 @@ def closeChannel(secret:abi.DynamicBytes):
                 )),
 
         If(Txn.sender()==revocationsub, Seq(
+                App.globalPut(Bytes("secret_proposed"),secret.get()),
                 #Chek revocation secret if it is given
                 If(secret.get()==App.globalGet(Bytes("secret")),
                         #Give all the money inside the contract + Balance_contract +1000 as there is only one transaction
@@ -179,8 +187,6 @@ def closeChannel(secret:abi.DynamicBytes):
                     Seq(
                         sendMoney(addB,ammB),
                         sendMoney(addA,ammA,True,addA),
-                        
-                        
                          )))
         ),
        )

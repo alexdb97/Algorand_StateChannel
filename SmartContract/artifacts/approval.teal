@@ -277,17 +277,9 @@ extract 0 8
 btoi
 app_global_put
 byte "secretProposer"
-load 6
-extract 2 0
-extract 56 32
+txn Sender
 app_global_put
-byte "secret"
-load 6
-extract 2 0
-extract 24 32
-app_global_put
-byte "secretProposer"
-app_global_get
+txn Sender
 byte "addA"
 app_global_get
 ==
@@ -296,11 +288,31 @@ byte "revocationSubmitter"
 byte "addA"
 app_global_get
 app_global_put
+byte "secret"
+load 6
+extract 2 0
+extract 56 32
+app_global_put
+byte "The_other_secret2"
+load 6
+extract 2 0
+extract 24 32
+app_global_put
 b tryClose_2_l3
 tryClose_2_l2:
 byte "revocationSubmitter"
 byte "addB"
 app_global_get
+app_global_put
+byte "secret"
+load 6
+extract 2 0
+extract 24 32
+app_global_put
+byte "The_other_secret1"
+load 6
+extract 2 0
+extract 56 32
 app_global_put
 tryClose_2_l3:
 byte "futureAccept"
@@ -336,6 +348,10 @@ byte "revocationSubmitter"
 app_global_get
 ==
 bz closeChannel_3_l6
+byte "secret_proposed"
+load 9
+extract 2 0
+app_global_put
 load 9
 extract 2 0
 byte "secret"

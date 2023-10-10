@@ -23,7 +23,7 @@ class MyTransaction():
 
     the balance of both accounts.
     """
-    def __init__(self,index=None,addr1=None,addr2=None,amnt1=0,amnt2=0,secret=None,secret_proposer=None):
+    def __init__(self,index=None,addr1=None,addr2=None,amnt1=0,amnt2=0,secret=None,secret2=None):
         
         self.index=index
         self.addr1=addr1
@@ -31,7 +31,7 @@ class MyTransaction():
         self.amnt1 = util.algos_to_microalgos(amnt1)
         self.amnt2 =util.algos_to_microalgos(amnt2)
         self.secret = secret
-        self.secret_proposer = secret_proposer
+        self.secret2=secret2
         self.signature:[bytes] = [None]*2
     
     """
@@ -67,9 +67,10 @@ class MyTransaction():
     return : json_transaction
     """ 
     def serialize(self):
-        attributes_to_include = ['index', 'addr1', 'addr2', 'amnt1', 'amnt2', 'secret_proposer']
+        attributes_to_include = ['index', 'addr1', 'addr2', 'amnt1', 'amnt2']
         js = {attr: getattr(self, attr) for attr in attributes_to_include}
         js['secret']=self.secret.decode('latin-1')
+        js['secret2']=self.secret2.decode('latin-1')
         js['sig1'] = self.signature[0]
         js['sig2'] = self.signature[1]
         
@@ -86,10 +87,11 @@ class MyTransaction():
     def deserialize(self,str):
        
         d = json.loads(str)
-        attributes = ['index', 'addr1', 'addr2', 'amnt1', 'amnt2', 'secret_proposer']
+        attributes = ['index', 'addr1', 'addr2', 'amnt1', 'amnt2']
         for attr in attributes:
             setattr(self,attr,d[attr])
         self.secret = d['secret'].encode('latin-1')
+        self.secret2 = d['secret2'].encode('latin-1')        
         self.signature[0]=d['sig1']
         self.signature[1]=d['sig2']
     
@@ -144,7 +146,7 @@ class MyTransaction():
         body.extend(self.amnt1.to_bytes(8,'big'))
         body.extend(self.amnt2.to_bytes(8,'big'))
         body.extend(self.secret)
-        body.extend(encoding.decode_address(self.secret_proposer))
+        body.extend(self.secret2)
         return body
         
 

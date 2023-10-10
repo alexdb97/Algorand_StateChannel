@@ -104,12 +104,22 @@ class Client(algod.AlgodClient):
     
     def send_secret(self,counterpart):
         offc:OffChainBalance = self.off_channel[counterpart]
-        return offc.get_secret()
+        return offc.get_my_secret()
     
     def receive_secret(self,counterpart,secret):
         offc:OffChainBalance = self.off_channel[counterpart]
         offc.insert_secret(secret)
-
     
+    def send_digest(self,counterpart):
+        offc:OffChainBalance = self.off_channel[counterpart]
+        return offc.generate_digest()
+
+    def receive_digest(self,counterpart,digest):
+        offc:OffChainBalance = self.off_channel[counterpart]
+        offc.insert_digest(digest)
+
+    def get(self,counterpart):
+        offc:OffChainBalance=self.off_channel[counterpart]
+        return offc.get()
 
     #--------------------------------------------------------------------------------------

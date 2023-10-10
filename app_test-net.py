@@ -53,34 +53,29 @@ print("Application identifier :",appid)
 Bob.join_channel(contract,appid,appaddr,Alice.address)
 #First step Deposit Transaction, Bob must give a signed transaction - OffChain
 print("Alice deposits 5 algos on the channel")
-txs=Alice.send(Bob.address,5,deposit=True,create=True)
+txs=Alice.send(Bob.address,4,deposit=True,create=True)
 Bob.receive(Alice.address,txs,signed=False)
 txs=Bob.send(Alice.address)
 Alice.receive(Bob.address,txs,signed=True)
 #(On chain) deposit
-Alice.deposit(5,Bob.address) #cost 2000 microAlgo
+Alice.deposit(4,Bob.address) #cost 2000 microAlgo
 #Before of the second transaction there will be the phase of secret reveal
 secret=Alice.send_secret(Bob.address)
 Bob.receive_secret(Alice.address,secret)
 print("Alice sends 5 algos to Bob")
 #Alice gives 3 algos to Bob
-txs=Alice.send(Bob.address,5,create=True)
+txs=Alice.send(Bob.address,2,create=True)
 Bob.receive(Alice.address,txs,signed=False)
 txs=Bob.send(Alice.address)
 Alice.receive(Bob.address,txs,signed=True)
 #Before of the transaction there will be the phase of secret reveal
 secret=Alice.send_secret(Bob.address)
 Bob.receive_secret(Alice.address,secret)
-#Bob gives 1 algos to Alice
-print("Bob sends 0 algos to Alice")
-txs=Bob.send(Alice.address,0,create=True)
-Alice.receive(Bob.address,txs,signed=False)
-txs=Alice.send(Bob.address)
-Bob.receive(Alice.address,txs,signed=True)
+
 # Closing step - OnChain
 print("closing the channel")
-Bob.presentation(Alice.address) #cost 6000 microalgo
-Alice.close_channel(Bob.address) #cost 1000 microAlgos
+Alice.presentation(Bob.address) #cost 6000 microalgo
+Bob.close_channel(Alice.address) #cost 1000 microAlgos
 Bob.delete(Alice.address )
 
 

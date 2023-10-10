@@ -61,6 +61,7 @@ class Test(unittest.TestCase):
     '''
     def test_open_and_leave(self):
 
+       
         account_info: Dict[str, Any] = self.Alice.account_info(self.Alice.address)
         amntAlice_t1 = account_info.get('amount')
 
@@ -72,6 +73,9 @@ class Test(unittest.TestCase):
 
 
         #First step Deposit Transaction - OffChain
+        digest = self.Bob.send_digest(self.Alice.address)
+        self.Alice.receive_digest(self.Bob.address,digest)
+
         txs=self.Alice.send(self.Bob.address,100,deposit=True,create=True)
         self.Bob.receive(self.Alice.address,txs,signed=False)
         txs=self.Bob.send(self.Alice.address)
@@ -79,9 +83,10 @@ class Test(unittest.TestCase):
         #(On chain) deposit
         self.Alice.deposit(100,self.Bob.address) #cost 2000 microAlgos
 
+
         # Closing step - OnChain 
         self.Alice.presentation(self.Bob.address) #cost 6000 microalgos
-
+       
         #In this case after the presentation he must wait normally 24h, as we are testing
         #the smart contract it is set 20 seconds on the smart contract
 
@@ -103,7 +108,6 @@ class Test(unittest.TestCase):
 
         #Bob has no costs, alices will have the money back and will pay the cost of all channels operations
         assert( amntBob_t2-amntBob_t1==0  and  amntAlice_t2-amntAlice_t1==-15000)
-        
 
     '''
     Second test example : After opening the channel there will be some ping pong transactions and finally close the
@@ -123,6 +127,9 @@ class Test(unittest.TestCase):
 
 
         #First step Deposit Transaction, Bob must give a signed transaction - OffChain
+        digest = self.Bob.send_digest(self.Alice.address)
+        self.Alice.receive_digest(self.Bob.address,digest)
+
         txs=self.Alice.send(self.Bob.address,5,deposit=True,create=True)
         self.Bob.receive(self.Alice.address,txs,signed=False)
         txs=self.Bob.send(self.Alice.address)
@@ -133,7 +140,13 @@ class Test(unittest.TestCase):
         #Before of the second transaction there will be the phase of secret reveal
         secret=self.Alice.send_secret(self.Bob.address)
         self.Bob.receive_secret(self.Alice.address,secret)
+        secret=self.Bob.send_secret(self.Alice.address)
+        self.Alice.receive_secret(self.Bob.address,secret)
+
         #Alice gives 75 algos to Bob
+        digest = self.Bob.send_digest(self.Alice.address)
+        self.Alice.receive_digest(self.Bob.address,digest)
+
         txs=self.Alice.send(self.Bob.address,4,create=True)
         self.Bob.receive(self.Alice.address,txs,signed=False)
         txs=self.Bob.send(self.Alice.address)
@@ -142,7 +155,13 @@ class Test(unittest.TestCase):
         #Before of the transaction there will be the phase of secret reveal
         secret=self.Alice.send_secret(self.Bob.address)
         self.Bob.receive_secret(self.Alice.address,secret)
+        secret=self.Bob.send_secret(self.Alice.address)
+        self.Alice.receive_secret(self.Bob.address,secret)
+
         #Bob gives 25 algos to Alice
+        digest = self.Alice.send_digest(self.Bob.address)
+        self.Bob.receive_digest(self.Alice.address,digest)
+
         txs=self.Bob.send(self.Alice.address,4,create=True)
         self.Alice.receive(self.Bob.address,txs,signed=False)
         txs=self.Alice.send(self.Bob.address)
@@ -153,7 +172,7 @@ class Test(unittest.TestCase):
         # Closing step - OnChain 
         self.Alice.presentation(self.Bob.address) #cost 6000 microalgos
 
-        self.Alice.close_channel(self.Bob.address) #cost 1000 microAlgos
+        self.Bob.close_channel(self.Alice.address) #cost 1000 microAlgos
         self.Alice.delete(self.Bob.address)
         
         
@@ -165,7 +184,7 @@ class Test(unittest.TestCase):
         account_info: Dict[str, Any] = self.Bob.account_info(self.Bob.address)
         amntBob_t2 = account_info.get('amount')
 
-        assert(amntBob_t2-amntBob_t1==0 and amntAlice_t2-amntAlice_t1==-15000)
+        assert(amntBob_t2-amntBob_t1==-1000 and amntAlice_t2-amntAlice_t1==-14000)
         
 
 
@@ -176,6 +195,7 @@ class Test(unittest.TestCase):
     '''
     def test_open_skam(self):
 
+      
         account_info: Dict[str, Any] = self.Alice.account_info(self.Alice.address)
         amntAlice_t1 = account_info.get('amount')
 
@@ -187,6 +207,9 @@ class Test(unittest.TestCase):
 
 
         #First step Deposit Transaction - OffChain
+        digest = self.Alice.send_digest(self.Bob.address)
+        self.Bob.receive_digest(self.Alice.address,digest)
+
         txs=self.Bob.send(self.Alice.address,100,deposit=True,create=True)
         self.Alice.receive(self.Bob.address,txs,signed=False)
         txs=self.Alice.send(self.Bob.address)
@@ -197,22 +220,32 @@ class Test(unittest.TestCase):
         #Before of the second transaction there will be the phase of secret reveal
         secret=self.Bob.send_secret(self.Alice.address)
         self.Alice.receive_secret(self.Bob.address,secret)
+        secret = self.Alice.send_secret(self.Bob.address)
+        self.Bob.receive_secret(self.Alice.address,secret)
+
         #Bob sends 50 Alice
+        digest = self.Alice.send_digest(self.Bob.address)
+        self.Bob.receive_digest(self.Alice.address,digest)
+
         txs=self.Bob.send(self.Alice.address,50,create=True)
         self.Alice.receive(self.Bob.address,txs,signed=False)
         txs=self.Alice.send(self.Bob.address)
         self.Bob.receive(self.Alice.address,txs,signed=True)
 
-        #Before of the transaction there will be the phase of secret reveal
+       
+        #Alice sends 25 algos to Bob
         secret=self.Bob.send_secret(self.Alice.address)
         self.Alice.receive_secret(self.Bob.address,secret)
-        #Alice sends 25 algos to Bob
+        secret = self.Alice.send_secret(self.Bob.address)
+        self.Bob.receive_secret(self.Alice.address,secret)
+
+        digest = self.Bob.send_digest(self.Alice.address)
+        self.Alice.receive_digest(self.Bob.address,digest)
+
         txs=self.Alice.send(self.Bob.address,25,create=True)
         self.Bob.receive(self.Alice.address,txs,signed=False)
         txs=self.Bob.send(self.Alice.address)
         self.Alice.receive(self.Bob.address,txs,signed=True)
-
-        
 
 
         # Closing step - OnChain 
@@ -255,6 +288,9 @@ class Test(unittest.TestCase):
 
 
         #First step Deposit Transaction, Alice must give back a signed transaction before opening - OffChain
+        digest = self.Alice.send_digest(self.Bob.address)
+        self.Bob.receive_digest(self.Alice.address,digest)
+
         txs=self.Bob.send(self.Alice.address,100,deposit=True,create=True)
         self.Alice.receive(self.Bob.address,txs,signed=False)
         txs=self.Alice.send(self.Bob.address)
@@ -265,7 +301,12 @@ class Test(unittest.TestCase):
         #Before of the second transaction there will be the phase of secret reveal
         secret=self.Bob.send_secret(self.Alice.address)
         self.Alice.receive_secret(self.Bob.address,secret)
+        secret=self.Alice.send_secret(self.Bob.address)
+        self.Bob.receive_secret(self.Alice.address,secret)
+
         #Alice gives 50 algos to Bob
+        digest = self.Alice.send_digest(self.Bob.address)
+        self.Bob.receive_digest(self.Alice.address,digest)
         txs=self.Bob.send(self.Alice.address,60,create=True)
 
         #Alice before storing the transaction will change the values
@@ -291,8 +332,7 @@ class Test(unittest.TestCase):
             self.Alice.delete(self.Bob.address)
        
 
-    
-       
+
 if __name__ == '__main__':
     unittest.main()
 

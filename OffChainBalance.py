@@ -14,6 +14,7 @@ class OffChainBalance():
 
     def __init__(self,algod,address1,address2) -> None:
         self.secrets = []
+        self.digest=None
         self.algod=algod
         self.transactions = []
         self.address1 = address1
@@ -33,48 +34,54 @@ class OffChainBalance():
         hash = hashlib.sha3_256()
         random_bytes = secrets.token_bytes(32)
         hash.update(random_bytes)
-        digest = hash.digest()
+        digest1 = hash.digest()
         self.secrets.append(random_bytes)
   
 
         if(self.algod.address==self.address1):
             self.amnt1=self.amnt1+value
             self.index=self.index+1
-            tx= MyTransaction(self.index,self.address1,self.address2,self.amnt1,self.amnt2,digest,self.address1)
+            tx= MyTransaction(self.index,self.address1,self.address2,self.amnt1,self.amnt2,digest1,self.digest)
             tx.sign(self.algod.signer,self.algod.address)
+            self.secrets.append([random_bytes,None])
             return tx.serialize()
         else:
             self.amnt2=self.amnt2+value
             self.index=self.index+1
-            tx= MyTransaction(self.index,self.address1,self.address2,self.amnt1,self.amnt2,digest,self.address2)
+            tx= MyTransaction(self.index,self.address1,self.address2,self.amnt1,self.amnt2,self.digest,digest1)
             tx.sign(self.algod.signer,self.algod.address)
+            self.secrets.append([None,random_bytes])
             return tx.serialize()
-            
+
 
     """
     create_transaction will check the current balance and create the transaction.
 
     :param value: the amount of money that is inserted inside the balance
     """ 
-    def create_transaction(self,value):
+    def create_transaction(self,value,deposit=False):
         hash = hashlib.sha3_256()
         random_bytes = secrets.token_bytes(32)
         hash.update(random_bytes)
-        digest = hash.digest()
-        self.secrets.append(random_bytes)
-
+        digest1 = hash.digest()
+     
     
         if(self.algod.address==self.address1):
             if(self.amnt1>=value):
                 self.index=self.index+1
-                tx = MyTransaction(self.index,self.address1,self.address2,self.amnt1-value,self.amnt2+value,digest,self.address1)
+                tx = MyTransaction(self.index,self.address1,self.address2,self.amnt1-value,self.amnt2+value,digest1,self.digest)
                 tx.sign(self.algod.signer,self.address1)
+                self.secrets.append([random_bytes,None])
+                self.digest=None
                 return tx.serialize()
         else:
              if(self.amnt2>=value):
                 self.index=self.index+1
-                tx = MyTransaction(self.index,self.address1,self.address2,self.amnt1+value,self.amnt2-value,digest,self.address2)
+                tx = MyTransaction(self.index,self.address1,self.address2,self.amnt1+value,self.amnt2-value,self.digest,digest1)
                 tx.sign(self.algod.signer,self.address2)
+                self.secrets.append([None,random_bytes])
+                self.digest=None
+            
                 return tx.serialize()
 
 
@@ -119,21 +126,81 @@ class OffChainBalance():
 
     
     """
+    get_my_secret will return the last secret to share with the other counterpart
+
+    """
+    def get_my_secret(self):
+        if(self.algod.address==self.address1):
+            return self.secrets[-1][0]
+        else:
+            return self.secrets[-1][1]
+    
+    """
     get_secret will return the last secret inserted from the list of secrets, if index is specified it will
 
     return the secret at the position given.
 
     :param index: position 
     """
-    def get_secret(self,index=-1):
-        return self.secrets[index]
-    
+    def get_secret(self,index):
+        if(self.algod.address==self.address1):
+            return self.secrets[index][1]
+        else:
+            return self.secrets[index][0]
+
+                    
+
     """
     insert_secret will append to the list of secrets the last one.
 
     :param  secret: secret
     """
     def insert_secret(self,secret):
-        self.secrets.append(secret)
+        if(self.algod.address==self.address1):
+            self.secrets[-1][1]=secret
+        else:
+            self.secrets[-1][0]=secret
+    
+
+    def get(self):
+        import base64
+        f=lambda a : [base64.b64encode(a[0]).decode('UTF-8'),base64.b64encode(a[1]).decode('UTF-8')]
+        r = map(f,self.secrets[0:-1])
+        return list(r)
+    
+    """
+    insert_digest will update the digest on the state
+
+    :param  secret: digest
+    """
+    def insert_digest(self,digest):
+        self.digest=digest
+
+    """
+    generate_digest will generate a digest to send to the counterpart that is packing the transaction, it will return the new digest and store the secret
+    """
+    def generate_digest(self):
+
+        hash = hashlib.sha3_256()
+        secret = secrets.token_bytes(32)
+        hash.update(secret)
+        digest = hash.digest()
+
+         
+        if(self.algod.address==self.address1):
+            self.secrets.append([secret,None])
+        else:
+             self.secrets.append([None,secret])
+        
+        
+        return digest
+
+
+ 
+    
+
+
+
+
    
 
