@@ -41,5 +41,5 @@ def aux_other_client():
         tx = transaction.PaymentTxn(address,sp=sp,receiver=address,amt=util.algos_to_microalgos(1))
         txs = tx.sign(private_key)
         algod_client.send_transaction(txs)
-        time.sleep(2)
+        time.sleep(3)
         count = count+1

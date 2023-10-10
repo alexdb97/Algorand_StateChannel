@@ -55,7 +55,7 @@ class Test(unittest.TestCase):
 
         self.Alice = Client(address1,private_key,signer1,algod_token,algod_address,headers={"X-API-Key": algod_token})
         self.Bob = Client(address2,private_key2,signer2,algod_token,algod_address,headers={"X-API-Key": algod_token})
-
+    
     '''
     First test example :  Alice puts the money, Bob goes away attempt to let her money stucked
     '''
@@ -80,8 +80,10 @@ class Test(unittest.TestCase):
         self.Bob.receive(self.Alice.address,txs,signed=False)
         txs=self.Bob.send(self.Alice.address)
         self.Alice.receive(self.Bob.address,txs,signed=True)
+        
         #(On chain) deposit
         self.Alice.deposit(100,self.Bob.address) #cost 2000 microAlgos
+
 
 
         # Closing step - OnChain 
@@ -107,7 +109,7 @@ class Test(unittest.TestCase):
         amntBob_t2 = account_info.get('amount')
 
         #Bob has no costs, alices will have the money back and will pay the cost of all channels operations
-        assert( amntBob_t2-amntBob_t1==0  and  amntAlice_t2-amntAlice_t1==-15000)
+        assert( amntBob_t2-amntBob_t1==0  and  amntAlice_t2-amntAlice_t1==-15000) 
 
     '''
     Second test example : After opening the channel there will be some ping pong transactions and finally close the
@@ -137,38 +139,46 @@ class Test(unittest.TestCase):
         #(On chain) deposit
         self.Alice.deposit(5,self.Bob.address) #cost 2000 microAlgos
 
-        #Before of the second transaction there will be the phase of secret reveal
-        secret=self.Alice.send_secret(self.Bob.address)
-        self.Bob.receive_secret(self.Alice.address,secret)
-        secret=self.Bob.send_secret(self.Alice.address)
-        self.Alice.receive_secret(self.Bob.address,secret)
 
-        #Alice gives 75 algos to Bob
+        #Second commitment transaction - Alice sends 4 algos to Bob - OffChain
+        #Bob gives the new secret
         digest = self.Bob.send_digest(self.Alice.address)
         self.Alice.receive_digest(self.Bob.address,digest)
-
+        #The transaction is created and sent to Bob
         txs=self.Alice.send(self.Bob.address,4,create=True)
         self.Bob.receive(self.Alice.address,txs,signed=False)
+        #Bob gives back the transaction signed
         txs=self.Bob.send(self.Alice.address)
         self.Alice.receive(self.Bob.address,txs,signed=True)
-
-        #Before of the transaction there will be the phase of secret reveal
-        secret=self.Alice.send_secret(self.Bob.address)
-        self.Bob.receive_secret(self.Alice.address,secret)
+        #Bob gives the revocation secret of the previous transaction
         secret=self.Bob.send_secret(self.Alice.address)
         self.Alice.receive_secret(self.Bob.address,secret)
+        #Alice gives the revocation secret of the previous transaction
+        secret=self.Alice.send_secret(self.Bob.address)
+        self.Bob.receive_secret(self.Alice.address,secret)
+        #Bob can give the service 
 
-        #Bob gives 25 algos to Alice
+
+        #Third commitment transaction - Bob sends 4 algos to Alice - OffChain
+        #Alice gives the new secret
         digest = self.Alice.send_digest(self.Bob.address)
         self.Bob.receive_digest(self.Alice.address,digest)
-
+        #The transaction is created and sent to Alice
         txs=self.Bob.send(self.Alice.address,4,create=True)
         self.Alice.receive(self.Bob.address,txs,signed=False)
+        #Alice gives back the transaction signed
         txs=self.Alice.send(self.Bob.address)
         self.Bob.receive(self.Alice.address,txs,signed=True)
+        #Alice gives the revocation secret of the previous transaction
+        secret=self.Alice.send_secret(self.Bob.address)
+        self.Bob.receive_secret(self.Alice.address,secret)
+        #Bob gives the revocation secret of the previous transaction
+        secret=self.Bob.send_secret(self.Alice.address)
+        self.Alice.receive_secret(self.Bob.address,secret)
+        #Alice can give the service
+        
 
-
-
+   
         # Closing step - OnChain 
         self.Alice.presentation(self.Bob.address) #cost 6000 microalgos
 
@@ -187,7 +197,7 @@ class Test(unittest.TestCase):
         assert(amntBob_t2-amntBob_t1==-1000 and amntAlice_t2-amntAlice_t1==-14000)
         
 
-
+    
     '''
     Third test example : After opening the channel there will be some ping pong transactions and finally Bob will put the first
 
@@ -217,35 +227,45 @@ class Test(unittest.TestCase):
         #(On chain) deposit
         self.Bob.deposit(100,self.Alice.address) #cost 2000 microAlgos
 
-        #Before of the second transaction there will be the phase of secret reveal
-        secret=self.Bob.send_secret(self.Alice.address)
-        self.Alice.receive_secret(self.Bob.address,secret)
-        secret = self.Alice.send_secret(self.Bob.address)
-        self.Bob.receive_secret(self.Alice.address,secret)
 
-        #Bob sends 50 Alice
+
+        #Second commitment transaction - Bob sends 50 algos to Alice - OffChain
         digest = self.Alice.send_digest(self.Bob.address)
         self.Bob.receive_digest(self.Alice.address,digest)
-
+        #The transaction is created and sent to Alice
         txs=self.Bob.send(self.Alice.address,50,create=True)
         self.Alice.receive(self.Bob.address,txs,signed=False)
+        #Alice gives back the transaction signed
         txs=self.Alice.send(self.Bob.address)
         self.Bob.receive(self.Alice.address,txs,signed=True)
-
-       
-        #Alice sends 25 algos to Bob
+        #Alice gives the revocation secret of the previous transaction
+        secret = self.Alice.send_secret(self.Bob.address)
+        self.Bob.receive_secret(self.Alice.address,secret)
+        #Bob gives the revocation secret of the previous transaction
         secret=self.Bob.send_secret(self.Alice.address)
         self.Alice.receive_secret(self.Bob.address,secret)
+        #Alice can give the service
+        
+
+       
+        #Third commitment transaction - Alice sends 25 algos to Bob - OffChain
+        digest = self.Bob.send_digest(self.Alice.address)
+        self.Alice.receive_digest(self.Bob.address,digest)
+        #The transaction is created and sent to Bob
+        txs=self.Alice.send(self.Bob.address,25,create=True)
+        self.Bob.receive(self.Alice.address,txs,signed=False)
+        #Bob gives back the transaction signed
+        txs=self.Bob.send(self.Alice.address)
+        self.Alice.receive(self.Bob.address,txs,signed=True)
+        #Bob gives the revocation secret of the previous transaction
+        secret=self.Bob.send_secret(self.Alice.address)
+        self.Alice.receive_secret(self.Bob.address,secret)
+        #Alice gives the revocation secret of the previous transaction
         secret = self.Alice.send_secret(self.Bob.address)
         self.Bob.receive_secret(self.Alice.address,secret)
 
-        digest = self.Bob.send_digest(self.Alice.address)
-        self.Alice.receive_digest(self.Bob.address,digest)
+        
 
-        txs=self.Alice.send(self.Bob.address,25,create=True)
-        self.Bob.receive(self.Alice.address,txs,signed=False)
-        txs=self.Bob.send(self.Alice.address)
-        self.Alice.receive(self.Bob.address,txs,signed=True)
 
 
         # Closing step - OnChain 
@@ -268,8 +288,7 @@ class Test(unittest.TestCase):
         account_info: Dict[str, Any] = self.Bob.account_info(self.Bob.address)
         amntBob_t2 = account_info.get('amount')
 
-     
-        assert((amntBob_t2-amntBob_t1)==-(100000000+8000) and (amntAlice_t2-amntAlice_t1)==(101000000-1006000))
+        assert((amntBob_t2-amntBob_t1)==-(100008000) and (amntAlice_t2-amntAlice_t1)==(99994000))
 
 
     '''
@@ -298,24 +317,29 @@ class Test(unittest.TestCase):
         #(On chain) deposit
         self.Bob.deposit(100,self.Alice.address) #cost 2000 microAlgos
 
-        #Before of the second transaction there will be the phase of secret reveal
-        secret=self.Bob.send_secret(self.Alice.address)
-        self.Alice.receive_secret(self.Bob.address,secret)
-        secret=self.Alice.send_secret(self.Bob.address)
-        self.Bob.receive_secret(self.Alice.address,secret)
+        
+        
+      
 
-        #Alice gives 50 algos to Bob
+        #Bob gives 60 algos to Alice
         digest = self.Alice.send_digest(self.Bob.address)
         self.Bob.receive_digest(self.Alice.address,digest)
+
         txs=self.Bob.send(self.Alice.address,60,create=True)
 
-        #Alice before storing the transaction will change the values
+        #Alice before storing the transaction will change the values  from 60 to 100 algos
         txs=txs.replace("60000000","100000000")
         txs=txs.replace("40000000","0")
 
         self.Alice.receive(self.Bob.address,txs,signed=False)
         txs=self.Alice.send(self.Bob.address)
         self.Bob.receive(self.Alice.address,txs,signed=True)
+        #Alice gives the revocation secret of the previous transaction
+        secret=self.Alice.send_secret(self.Bob.address)
+        self.Bob.receive_secret(self.Alice.address,secret)
+        #Bob gives the revocation secret of the previous transaction
+        secret=self.Bob.send_secret(self.Alice.address)
+        self.Alice.receive_secret(self.Bob.address,secret)
 
      
         #Presentation raise the exception on Verfication of signature
@@ -329,7 +353,7 @@ class Test(unittest.TestCase):
         
         #Delete reaise the exception for the same reason of the former operations
         with self.assertRaises(Exception): 
-            self.Alice.delete(self.Bob.address)
+            self.Alice.delete(self.Bob.address) 
        
 
 

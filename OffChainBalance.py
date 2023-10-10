@@ -131,12 +131,12 @@ class OffChainBalance():
     """
     def get_my_secret(self):
         if(self.algod.address==self.address1):
-            return self.secrets[-1][0]
+            return self.secrets[-2][0]
         else:
-            return self.secrets[-1][1]
+            return self.secrets[-2][1]
     
     """
-    get_secret will return the last secret inserted from the list of secrets, if index is specified it will
+    get_secret will return the secret with the index from the list of secrets, if index is specified it will
 
     return the secret at the position given.
 
@@ -157,9 +157,9 @@ class OffChainBalance():
     """
     def insert_secret(self,secret):
         if(self.algod.address==self.address1):
-            self.secrets[-1][1]=secret
+            self.secrets[-2][1]=secret
         else:
-            self.secrets[-1][0]=secret
+            self.secrets[-2][0]=secret
     
 
     def get(self):
