@@ -35,7 +35,7 @@ class OffChainBalance():
         random_bytes = secrets.token_bytes(32)
         hash.update(random_bytes)
         digest1 = hash.digest()
-        self.secrets.append(random_bytes)
+        
   
 
         if(self.algod.address==self.address1):

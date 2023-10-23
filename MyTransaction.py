@@ -28,8 +28,8 @@ class MyTransaction():
         self.index=index
         self.addr1=addr1
         self.addr2 = addr2
-        self.amnt1 = util.algos_to_microalgos(amnt1)
-        self.amnt2 =util.algos_to_microalgos(amnt2)
+        self.amnt1 = amnt1
+        self.amnt2 =amnt2
         self.secret = secret
         self.secret2=secret2
         self.signature:[bytes] = [None]*2
@@ -120,7 +120,7 @@ class MyTransaction():
     
     
     def get_amnt1(self):
-        return util.microalgos_to_algos(self.amnt1)
+        return self.amnt1
     
 
     """
@@ -129,7 +129,7 @@ class MyTransaction():
     return: amnt2
     """
     def get_amnt2(self):
-        return util.microalgos_to_algos(self.amnt2)
+        return self.amnt2
     
 
     """

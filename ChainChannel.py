@@ -105,14 +105,14 @@ class ChainChannel() :
     """
     def deposit_chain(self,amount):
 
-        algo_to_micro =util.algos_to_microalgos(amount)
+        
 
         sp:transaction.SuggestedParams = self.algod.suggested_params()
 
         signer = AccountTransactionSigner(self.algod.private)
         atc = AtomicTransactionComposer()
     
-        tx = transaction.PaymentTxn(self.algod.address,sp=sp,receiver=self.app_address,amt=algo_to_micro)
+        tx = transaction.PaymentTxn(self.algod.address,sp=sp,receiver=self.app_address,amt=amount)
         tws = TransactionWithSigner(tx,signer)
         
         atc.add_method_call(

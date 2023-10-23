@@ -30,92 +30,75 @@ pkB =mnemonic.to_private_key(mB)
 addressB= account.address_from_private_key(pkB)
 signerB = atomic_transaction_composer.AccountTransactionSigner(pkB)
 
-#Reading the access token to testnet
-with open("/home/ale/Desktop/Access/token.txt") as fd:
-    file = fd.read()
-    algod_token=file.replace('\n','')
+#Reading the access token and the endpoint testnet
+with open("/home/ale/Desktop/Access/tokenAPI.txt") as fd:
+    str = fd.readline()
+    algod_token=str.replace('\n','')
+    str=fd.readline()
+    algod_url=str.replace('\n','')
+    print(algod_url)
     fd.close()
-
-
-algod_url = "https://testnet-algorand.api.purestake.io/ps2"
 
 
 headers = {
    "X-API-Key": algod_token,
 }
 
-
-Alice = Client(addressA,pkA,signerA,algod_token,algod_url,headers)
-Bob = Client(addressB,pkB,signerB,algod_token,algod_url,headers)
-
-contract,appid,appaddr=Alice.open_channel(Bob.address) #Cost 2000 microAlgos
-print("Application identifier :",appid)
-Bob.join_channel(contract,appid,appaddr,Alice.address)
-#First step Deposit Transaction, Bob must give a signed transaction - OffChain
-print("Alice deposits 5 algos on the channel")
-txs=Alice.send(Bob.address,4,deposit=True,create=True)
-Bob.receive(Alice.address,txs,signed=False)
-txs=Bob.send(Alice.address)
-Alice.receive(Bob.address,txs,signed=True)
-#(On chain) deposit
-Alice.deposit(4,Bob.address) #cost 2000 microAlgo
-#Before of the second transaction there will be the phase of secret reveal
-secret=Alice.send_secret(Bob.address)
-Bob.receive_secret(Alice.address,secret)
-print("Alice sends 5 algos to Bob")
-#Alice gives 3 algos to Bob
-txs=Alice.send(Bob.address,2,create=True)
-Bob.receive(Alice.address,txs,signed=False)
-txs=Bob.send(Alice.address)
-Alice.receive(Bob.address,txs,signed=True)
-#Before of the transaction there will be the phase of secret reveal
-secret=Alice.send_secret(Bob.address)
-Bob.receive_secret(Alice.address,secret)
-
-# Closing step - OnChain
-print("closing the channel")
-Alice.presentation(Bob.address) #cost 6000 microalgo
-Bob.close_channel(Alice.address) #cost 1000 microAlgos
-Bob.delete(Alice.address )
+def Onchain(number):
+    #10 interaction with the blockchain
+    for i in range (0,number):
+        alg = algod.AlgodClient(algod_token,algod_url,headers)
+        sp = alg.suggested_params()
+        tx = transaction.PaymentTxn(addressA,sp,addressB,1)
+        txs = tx.sign(pkA)
+        txn_res=alg.send_transaction(txs)
+        res = transaction.wait_for_confirmation(alg,txn_res,1000)
 
 
-""" contract,appid,appaddr=Alice.open_channel(Bob.address) #Cost 2000 microAlgos
-Bob.join_channel(contract,appid,appaddr,Alice.address)
-print("Application identifier :",appid)
+def State_Channel_Payments(number):
+    Alice = Client(addressA,pkA,signerA,algod_token,algod_url,headers)
+    Bob = Client(addressB,pkB,signerB,algod_token,algod_url,headers)
 
-#First step Deposit Transaction, Alice must give back a signed transaction before opening - OffChain
-txs=Bob.send(Alice.address,20,deposit=True,create=True)
-Alice.receive(Bob.address,txs,signed=False)
-txs=Alice.send(Bob.address)
-Bob.receive(Alice.address,txs,signed=True)
-#(On chain) deposit
-Bob.deposit(20,Alice.address) #cost 2000 microAlgo
-print("Bob deposits 20 algos on the channel")
-#Before of the second transaction there will be the phase of secret reveal
-secret=Bob.send_secret(Alice.address)
-Alice.receive_secret(Bob.address,secret)
-#Bob sends 20 algos to Alice
-print("Bob sends 10 algos to Alice")
-txs=Bob.send(Alice.address,10,create=True)
-Alice.receive(Bob.address,txs,signed=False)
-txs=Alice.send(Bob.address)
-Bob.receive(Alice.address,txs,signed=True)
-#Before of the transaction there will be the phase of secret reveal
-secret=Bob.send_secret(Alice.address)
-Alice.receive_secret(Bob.address,secret)
-#Alice sends 5 algos to Bob
-print("Alice sends 5 algos to Bob")
-txs=Alice.send(Bob.address,5,create=True)
-Bob.receive(Alice.address,txs,signed=False)
-txs=Bob.send(Alice.address)
-Alice.receive(Bob.address,txs,signed=True)
+    contract,appid,appaddr=Alice.open_channel(Bob.address) #Cost 2000 microAlgos
+    print("Application identifier :",appid)
+    Bob.join_channel(contract,appid,appaddr,Alice.address)
+    #Create the cotract
+    #First step Deposit Transaction, Bob must give a signed transaction - OffChain
+    digest = Bob.send_digest(Alice.address)
+    Alice.receive_digest(Bob.address,digest)
 
-# Closing step - OnChain 
-Bob.presentation(Alice.address,0) #cost 6000 microalgo
+    txs=Alice.send(Bob.address,10**6,deposit=True,create=True)
+    Bob.receive(Alice.address,txs,signed=False)
+    txs=Bob.send(Alice.address)
+    Alice.receive(Bob.address,txs,signed=True)
+    #(On chain) deposit
+    Alice.deposit(10**6,Bob.address) #cost 2000 microAlgos
+
+    for i in range(0,number):
+        #Bob gives the new secret
+        digest = Bob.send_digest(Alice.address)
+        Alice.receive_digest(Bob.address,digest)
+        #The transaction is created and sent to Bob
+        txs=Alice.send(Bob.address,1,create=True)
+        Bob.receive(Alice.address,txs,signed=False)
+        #Bob gives back the transaction signed
+        txs=Bob.send(Alice.address)
+        Alice.receive(Bob.address,txs,signed=True)
+        #Bob gives the revocation secret of the previous transaction
+        secret=Bob.send_secret(Alice.address)
+        Alice.receive_secret(Bob.address,secret)
+        #Alice gives the revocation secret of the previous transaction
+        secret=Alice.send_secret(Bob.address)
+        Bob.receive_secret(Alice.address,secret)
+        
+    # Closing step - OnChain 
+    Alice.presentation(Bob.address) #cost 6000 microalgos
+    Bob.close_channel(Alice.address) #cost 1000 microAlgos
+    Alice.delete(Bob.address)
 
 
-#Alice gives back the secret and can punish Bob taking all the money
-Alice.close_channel(Bob.address,0) #cost 1000 microAlgos
-Alice.delete(Bob.address) """
+#State_Channel_Payments(1000)
+Onchain(1000)
+
 
 

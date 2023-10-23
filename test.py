@@ -132,12 +132,12 @@ class Test(unittest.TestCase):
         digest = self.Bob.send_digest(self.Alice.address)
         self.Alice.receive_digest(self.Bob.address,digest)
 
-        txs=self.Alice.send(self.Bob.address,5,deposit=True,create=True)
+        txs=self.Alice.send(self.Bob.address,util.algos_to_microalgos(5),deposit=True,create=True)
         self.Bob.receive(self.Alice.address,txs,signed=False)
         txs=self.Bob.send(self.Alice.address)
         self.Alice.receive(self.Bob.address,txs,signed=True)
         #(On chain) deposit
-        self.Alice.deposit(5,self.Bob.address) #cost 2000 microAlgos
+        self.Alice.deposit(util.algos_to_microalgos(5),self.Bob.address) #cost 2000 microAlgos
 
 
         #Second commitment transaction - Alice sends 4 algos to Bob - OffChain
@@ -145,7 +145,7 @@ class Test(unittest.TestCase):
         digest = self.Bob.send_digest(self.Alice.address)
         self.Alice.receive_digest(self.Bob.address,digest)
         #The transaction is created and sent to Bob
-        txs=self.Alice.send(self.Bob.address,4,create=True)
+        txs=self.Alice.send(self.Bob.address,util.algos_to_microalgos(4),create=True)
         self.Bob.receive(self.Alice.address,txs,signed=False)
         #Bob gives back the transaction signed
         txs=self.Bob.send(self.Alice.address)
@@ -164,7 +164,7 @@ class Test(unittest.TestCase):
         digest = self.Alice.send_digest(self.Bob.address)
         self.Bob.receive_digest(self.Alice.address,digest)
         #The transaction is created and sent to Alice
-        txs=self.Bob.send(self.Alice.address,4,create=True)
+        txs=self.Bob.send(self.Alice.address,util.algos_to_microalgos(4),create=True)
         self.Alice.receive(self.Bob.address,txs,signed=False)
         #Alice gives back the transaction signed
         txs=self.Alice.send(self.Bob.address)
@@ -220,12 +220,12 @@ class Test(unittest.TestCase):
         digest = self.Alice.send_digest(self.Bob.address)
         self.Bob.receive_digest(self.Alice.address,digest)
 
-        txs=self.Bob.send(self.Alice.address,100,deposit=True,create=True)
+        txs=self.Bob.send(self.Alice.address,util.algos_to_microalgos(100),deposit=True,create=True)
         self.Alice.receive(self.Bob.address,txs,signed=False)
         txs=self.Alice.send(self.Bob.address)
         self.Bob.receive(self.Alice.address,txs,signed=True)
         #(On chain) deposit
-        self.Bob.deposit(100,self.Alice.address) #cost 2000 microAlgos
+        self.Bob.deposit(util.algos_to_microalgos(100),self.Alice.address) #cost 2000 microAlgos
 
 
 
@@ -233,7 +233,7 @@ class Test(unittest.TestCase):
         digest = self.Alice.send_digest(self.Bob.address)
         self.Bob.receive_digest(self.Alice.address,digest)
         #The transaction is created and sent to Alice
-        txs=self.Bob.send(self.Alice.address,50,create=True)
+        txs=self.Bob.send(self.Alice.address,util.algos_to_microalgos(50),create=True)
         self.Alice.receive(self.Bob.address,txs,signed=False)
         #Alice gives back the transaction signed
         txs=self.Alice.send(self.Bob.address)
@@ -245,14 +245,13 @@ class Test(unittest.TestCase):
         secret=self.Bob.send_secret(self.Alice.address)
         self.Alice.receive_secret(self.Bob.address,secret)
         #Alice can give the service
-        
 
-       
+
         #Third commitment transaction - Alice sends 25 algos to Bob - OffChain
         digest = self.Bob.send_digest(self.Alice.address)
         self.Alice.receive_digest(self.Bob.address,digest)
         #The transaction is created and sent to Bob
-        txs=self.Alice.send(self.Bob.address,25,create=True)
+        txs=self.Alice.send(self.Bob.address,util.algos_to_microalgos(25),create=True)
         self.Bob.receive(self.Alice.address,txs,signed=False)
         #Bob gives back the transaction signed
         txs=self.Bob.send(self.Alice.address)
@@ -260,10 +259,11 @@ class Test(unittest.TestCase):
         #Bob gives the revocation secret of the previous transaction
         secret=self.Bob.send_secret(self.Alice.address)
         self.Alice.receive_secret(self.Bob.address,secret)
+
         #Alice gives the revocation secret of the previous transaction
         secret = self.Alice.send_secret(self.Bob.address)
         self.Bob.receive_secret(self.Alice.address,secret)
-
+        #Bob can share the service
         
 
 
@@ -310,12 +310,12 @@ class Test(unittest.TestCase):
         digest = self.Alice.send_digest(self.Bob.address)
         self.Bob.receive_digest(self.Alice.address,digest)
 
-        txs=self.Bob.send(self.Alice.address,100,deposit=True,create=True)
+        txs=self.Bob.send(self.Alice.address,util.algos_to_microalgos(100),deposit=True,create=True)
         self.Alice.receive(self.Bob.address,txs,signed=False)
         txs=self.Alice.send(self.Bob.address)
         self.Bob.receive(self.Alice.address,txs,signed=True)
         #(On chain) deposit
-        self.Bob.deposit(100,self.Alice.address) #cost 2000 microAlgos
+        self.Bob.deposit(util.algos_to_microalgos(100),self.Alice.address) #cost 2000 microAlgos
 
         
         
@@ -325,7 +325,7 @@ class Test(unittest.TestCase):
         digest = self.Alice.send_digest(self.Bob.address)
         self.Bob.receive_digest(self.Alice.address,digest)
 
-        txs=self.Bob.send(self.Alice.address,60,create=True)
+        txs=self.Bob.send(self.Alice.address,util.algos_to_microalgos(60),create=True)
 
         #Alice before storing the transaction will change the values  from 60 to 100 algos
         txs=txs.replace("60000000","100000000")
@@ -355,6 +355,124 @@ class Test(unittest.TestCase):
         with self.assertRaises(Exception): 
             self.Alice.delete(self.Bob.address) 
        
+
+    def test_overflow(self):
+
+        contract,appid,appaddr=self.Alice.open_channel(self.Bob.address) #Cost 2000 microAlgos
+        self.Bob.join_channel(contract,appid,appaddr,self.Alice.address)
+
+
+        #First step Deposit Transaction - OffChain
+        digest = self.Alice.send_digest(self.Bob.address)
+        self.Bob.receive_digest(self.Alice.address,digest)
+
+        txs=self.Bob.send(self.Alice.address,util.algos_to_microalgos(10**5),deposit=True,create=True)
+        self.Alice.receive(self.Bob.address,txs,signed=False)
+        txs=self.Alice.send(self.Bob.address)
+        self.Bob.receive(self.Alice.address,txs,signed=True)
+        #(On chain) deposit
+        self.Bob.deposit(util.algos_to_microalgos(10**5),self.Alice.address) #cost 2000 microAlgos
+
+        self.Bob.presentation(self.Alice.address)
+        self.Alice.close_channel(self.Bob.address)
+        
+
+    '''
+    Six test example : normal use with two deposit transaction
+    '''
+    def test_normal_use2(self):
+
+        account_info: Dict[str, Any] = self.Alice.account_info(self.Alice.address)
+        amntAlice_t1 = account_info.get('amount')
+
+        account_info: Dict[str, Any] = self.Bob.account_info(self.Bob.address)
+        amntBob_t1 = account_info.get('amount')
+
+        contract,appid,appaddr=self.Alice.open_channel(self.Bob.address) #Cost 2000 microAlgos
+        self.Bob.join_channel(contract,appid,appaddr,self.Alice.address)
+
+
+        #First step Deposit Transaction, Bob must give a signed transaction - OffChain
+        digest = self.Bob.send_digest(self.Alice.address)
+        self.Alice.receive_digest(self.Bob.address,digest)
+
+        txs=self.Alice.send(self.Bob.address,util.algos_to_microalgos(5),deposit=True,create=True)
+        self.Bob.receive(self.Alice.address,txs,signed=False)
+        txs=self.Bob.send(self.Alice.address)
+        self.Alice.receive(self.Bob.address,txs,signed=True)
+        #(On chain) deposit
+        self.Alice.deposit(util.algos_to_microalgos(5),self.Bob.address) #cost 2000 microAlgos
+
+        #Second Deposit Transaction, Bob must give a signed transaction - OffChain
+        digest = self.Bob.send_digest(self.Alice.address)
+        self.Alice.receive_digest(self.Bob.address,digest)
+        txs=self.Alice.send(self.Bob.address,util.algos_to_microalgos(5),deposit=True,create=True)
+        self.Bob.receive(self.Alice.address,txs,signed=False)
+        txs=self.Bob.send(self.Alice.address)
+        self.Alice.receive(self.Bob.address,txs,signed=True)
+        #(On chain) deposit
+        self.Alice.deposit(util.algos_to_microalgos(5),self.Bob.address) #cost 2000 microAlgos
+        #Alice gives the revocation secret of the previous transaction
+        secret=self.Alice.send_secret(self.Bob.address)
+        self.Bob.receive_secret(self.Alice.address,secret)
+        #Bob gives the revocation secret of the previous transaction
+        secret=self.Bob.send_secret(self.Alice.address)
+        self.Alice.receive_secret(self.Bob.address,secret)
+        
+        
+        #Second commitment transaction - Alice sends 4 algos to Bob - OffChain
+        #Bob gives the new secret
+        digest = self.Bob.send_digest(self.Alice.address)
+        self.Alice.receive_digest(self.Bob.address,digest)
+        #The transaction is created and sent to Bob
+        txs=self.Alice.send(self.Bob.address,util.algos_to_microalgos(4),create=True)
+        self.Bob.receive(self.Alice.address,txs,signed=False)
+        #Bob gives back the transaction signed
+        txs=self.Bob.send(self.Alice.address)
+        self.Alice.receive(self.Bob.address,txs,signed=True)
+        #Bob gives the revocation secret of the previous transaction
+        secret=self.Bob.send_secret(self.Alice.address)
+        self.Alice.receive_secret(self.Bob.address,secret)
+        #Alice gives the revocation secret of the previous transaction
+        secret=self.Alice.send_secret(self.Bob.address)
+        self.Bob.receive_secret(self.Alice.address,secret)
+        #Bob can give the service  """
+        
+        #Third commitment transaction - Bob sends 4 algos to Alice - OffChain
+        #Alice gives the new secret
+        digest = self.Alice.send_digest(self.Bob.address)
+        self.Bob.receive_digest(self.Alice.address,digest)
+        #The transaction is created and sent to Alice
+        txs=self.Bob.send(self.Alice.address,util.algos_to_microalgos(4),create=True)
+        self.Alice.receive(self.Bob.address,txs,signed=False)
+        #Alice gives back the transaction signed
+        txs=self.Alice.send(self.Bob.address)
+        self.Bob.receive(self.Alice.address,txs,signed=True)
+        #Alice gives the revocation secret of the previous transaction
+        secret=self.Alice.send_secret(self.Bob.address)
+        self.Bob.receive_secret(self.Alice.address,secret)
+        #Bob gives the revocation secret of the previous transaction
+        secret=self.Bob.send_secret(self.Alice.address)
+        self.Alice.receive_secret(self.Bob.address,secret)
+        #Alice can give the service """
+        
+
+   
+        # Closing step - OnChain 
+        self.Alice.presentation(self.Bob.address) #cost 6000 microalgos
+
+        self.Bob.close_channel(self.Alice.address) #cost 1000 microAlgos
+        self.Alice.delete(self.Bob.address)
+        
+
+        account_info: Dict[str, Any] = self.Alice.account_info(self.Alice.address)
+        amntAlice_t2 = account_info.get('amount')
+
+        account_info: Dict[str, Any] = self.Bob.account_info(self.Bob.address)
+        amntBob_t2 = account_info.get('amount')
+
+        assert(amntBob_t2-amntBob_t1==-1000 and amntAlice_t2-amntAlice_t1==-16000)
+
 
 
 if __name__ == '__main__':
