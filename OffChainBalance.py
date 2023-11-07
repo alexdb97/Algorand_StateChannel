@@ -1,7 +1,6 @@
 from MyTransaction import MyTransaction
 import secrets
 import hashlib
-
 class OffChainBalance():
 
 
@@ -111,6 +110,7 @@ class OffChainBalance():
         self.amnt1=tx.get_amnt1()
         self.amnt2 = tx.get_amnt2()
         self.transactions.append(tx)
+       
 
 
     """

@@ -12,11 +12,11 @@ method "deposit(pay)void"
 ==
 bnz main_l8
 txna ApplicationArgs 0
-method "tryClose(byte[])void"
+method "presentation(byte[])void"
 ==
 bnz main_l7
 txna ApplicationArgs 0
-method "closeChannel(byte[])void"
+method "close_channel(byte[])void"
 ==
 bnz main_l6
 err
@@ -32,7 +32,7 @@ assert
 txna ApplicationArgs 1
 store 3
 load 3
-callsub closeChannel_3
+callsub closechannel_3
 int 1
 return
 main_l7:
@@ -47,7 +47,7 @@ assert
 txna ApplicationArgs 1
 store 2
 load 2
-callsub tryClose_2
+callsub presentation_2
 int 1
 return
 main_l8:
@@ -129,6 +129,11 @@ return
 // open_channel
 openchannel_0:
 store 4
+byte "open"
+app_global_get
+int 0
+==
+assert
 byte "addA"
 txna Accounts 1
 app_global_put
@@ -152,6 +157,9 @@ gtxns Receiver
 global CurrentApplicationAddress
 ==
 assert
+byte "open"
+int 1
+app_global_put
 int 1
 return
 
@@ -201,8 +209,8 @@ app_global_put
 int 1
 return
 
-// tryClose
-tryClose_2:
+// presentation
+presentation_2:
 store 6
 load 6
 extract 2 0
@@ -283,7 +291,7 @@ txn Sender
 byte "addA"
 app_global_get
 ==
-bnz tryClose_2_l2
+bnz presentation_2_l2
 byte "revocationSubmitter"
 byte "addA"
 app_global_get
@@ -293,13 +301,8 @@ load 6
 extract 2 0
 extract 56 32
 app_global_put
-byte "The_other_secret2"
-load 6
-extract 2 0
-extract 24 32
-app_global_put
-b tryClose_2_l3
-tryClose_2_l2:
+b presentation_2_l3
+presentation_2_l2:
 byte "revocationSubmitter"
 byte "addB"
 app_global_get
@@ -309,12 +312,7 @@ load 6
 extract 2 0
 extract 24 32
 app_global_put
-byte "The_other_secret1"
-load 6
-extract 2 0
-extract 56 32
-app_global_put
-tryClose_2_l3:
+presentation_2_l3:
 byte "futureAccept"
 global Round
 int 2
@@ -326,8 +324,8 @@ app_global_put
 int 1
 return
 
-// closeChannel
-closeChannel_3:
+// close_channel
+closechannel_3:
 store 9
 byte "flag"
 app_global_get
@@ -341,13 +339,13 @@ txn Sender
 byte "secretProposer"
 app_global_get
 ==
-bnz closeChannel_3_l5
-closeChannel_3_l1:
+bnz closechannel_3_l5
+closechannel_3_l1:
 txn Sender
 byte "revocationSubmitter"
 app_global_get
 ==
-bz closeChannel_3_l6
+bz closechannel_3_l6
 byte "secret_proposed"
 load 9
 extract 2 0
@@ -357,7 +355,7 @@ extract 2 0
 byte "secret"
 app_global_get
 ==
-bnz closeChannel_3_l4
+bnz closechannel_3_l4
 itxn_begin
 global CurrentApplicationAddress
 itxn_field Sender
@@ -385,8 +383,8 @@ byte "addA"
 app_global_get
 itxn_field CloseRemainderTo
 itxn_submit
-b closeChannel_3_l6
-closeChannel_3_l4:
+b closechannel_3_l6
+closechannel_3_l4:
 itxn_begin
 global CurrentApplicationAddress
 itxn_field Sender
@@ -405,8 +403,8 @@ byte "revocationSubmitter"
 app_global_get
 itxn_field CloseRemainderTo
 itxn_submit
-b closeChannel_3_l6
-closeChannel_3_l5:
+b closechannel_3_l6
+closechannel_3_l5:
 global Round
 byte "futureAccept"
 app_global_get
@@ -439,6 +437,6 @@ byte "addA"
 app_global_get
 itxn_field CloseRemainderTo
 itxn_submit
-b closeChannel_3_l1
-closeChannel_3_l6:
+b closechannel_3_l1
+closechannel_3_l6:
 retsub

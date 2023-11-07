@@ -59,7 +59,7 @@ class Client(algod.AlgodClient):
 
     def presentation(self,counterpart,transaction=-1):
         c:ChainChannel = self.opened_channels[counterpart]
-        c.tryClose(self.off_channel[counterpart].get_transaction(transaction).contract_payload())
+        c.presentation(self.off_channel[counterpart].get_transaction(transaction).contract_payload())
     
     def close_channel(self,counterpart,secret=None):
         c:ChainChannel = self.opened_channels[counterpart]

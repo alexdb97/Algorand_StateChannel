@@ -89,6 +89,7 @@ class ChainChannel() :
 
         result = atc.execute(self.algod, 1000)  # Wait for 10 rounds
 
+        
         return self.app_id, self.app_address
 
       
@@ -128,8 +129,8 @@ class ChainChannel() :
         return group_result.abi_results[0]
 
 
-    #Try Close
-    def tryClose(self,my_tx):
+    #presentation
+    def presentation(self,my_tx):
 
         sp:transaction.SuggestedParams = self.algod.suggested_params()
         signer = AccountTransactionSigner(self.algod.private)
@@ -139,7 +140,7 @@ class ChainChannel() :
         atc = AtomicTransactionComposer()
         atc.add_method_call(
             app_id=self.app_id,
-            method = self.contract.get_method_by_name("tryClose"),
+            method = self.contract.get_method_by_name("presentation"),
             sender=self.algod.address,
             sp=sp,
             method_args=[my_tx],
@@ -148,6 +149,7 @@ class ChainChannel() :
 
         #Reaching the budget of EdVerify using no-op transaction
         for x in range(0,5):
+    
             txi = transaction.ApplicationNoOpTxn(self.algod.address,sp,self.app_id,note=str(x).encode('utf-8'))
             tws = TransactionWithSigner(txi,signer)
             atc.add_transaction(tws) 
@@ -173,7 +175,7 @@ class ChainChannel() :
         
          atc.add_method_call(
              app_id=self.app_id,
-             method = self.contract.get_method_by_name("closeChannel"),
+             method = self.contract.get_method_by_name("close_channel"),
              sender=self.algod.address,
              sp=sp,
              signer=signer,

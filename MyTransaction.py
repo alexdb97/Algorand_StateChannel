@@ -4,7 +4,6 @@ from typing import cast
 from nacl.signing import SigningKey
 from algosdk import  util,encoding
 import json
-
 #from Crypto.Hash import keccak
 from pyteal import *
 
@@ -75,6 +74,7 @@ class MyTransaction():
         js['sig2'] = self.signature[1]
         
         ser =json.dumps(js)
+        
         return ser
     
     """
@@ -108,6 +108,7 @@ class MyTransaction():
         payload.extend(app.encode('latin-1'))
         app = self.signature[1]
         payload.extend(app.encode('latin-1'))
+       
         return payload  
     
     """
@@ -147,6 +148,7 @@ class MyTransaction():
         body.extend(self.amnt2.to_bytes(8,'big'))
         body.extend(self.secret)
         body.extend(self.secret2)
+    
         return body
         
 

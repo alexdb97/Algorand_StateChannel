@@ -3,7 +3,9 @@ from typing import Any
 from algosdk.v2client import algod
 from algosdk import mnemonic,account, atomic_transaction_composer,transaction
 from  Client import Client
-import time
+from utilites.time_dec import bench
+import os
+import csv
 
 from algosdk.atomic_transaction_composer import (
     AccountTransactionSigner,
@@ -31,11 +33,12 @@ addressB= account.address_from_private_key(pkB)
 signerB = atomic_transaction_composer.AccountTransactionSigner(pkB)
 
 #Reading the access token and the endpoint testnet
+
 with open("/home/ale/Desktop/Access/tokenAPI.txt") as fd:
-    str = fd.readline()
-    algod_token=str.replace('\n','')
-    str=fd.readline()
-    algod_url=str.replace('\n','')
+    stri = fd.readline()
+    algod_token=stri.replace('\n','')
+    stri=fd.readline()
+    algod_url=stri.replace('\n','')
     print(algod_url)
     fd.close()
 
@@ -44,18 +47,29 @@ headers = {
    "X-API-Key": algod_token,
 }
 
+""" total_fee=0
+#res = transaction.wait_for_confirmation(alg,txn_res,1000)
+total_fee = total_fee+tx.fee
+number,total_fee
+ """
+@bench
 def Onchain(number):
-    #10 interaction with the blockchain
+    total_fee=0
     for i in range (0,number):
         alg = algod.AlgodClient(algod_token,algod_url,headers)
         sp = alg.suggested_params()
-        tx = transaction.PaymentTxn(addressA,sp,addressB,1)
+        tx = transaction.PaymentTxn(addressA,sp,addressB,1,note=str(i+number).encode('utf-8'))
         txs = tx.sign(pkA)
+        total_fee = total_fee+tx.fee
         txn_res=alg.send_transaction(txs)
-        res = transaction.wait_for_confirmation(alg,txn_res,1000)
+    
+    return number,total_fee
+
+    
 
 
-def State_Channel_Payments(number):
+@bench
+def state_channel(number):
     Alice = Client(addressA,pkA,signerA,algod_token,algod_url,headers)
     Bob = Client(addressB,pkB,signerB,algod_token,algod_url,headers)
 
@@ -79,7 +93,7 @@ def State_Channel_Payments(number):
         digest = Bob.send_digest(Alice.address)
         Alice.receive_digest(Bob.address,digest)
         #The transaction is created and sent to Bob
-        txs=Alice.send(Bob.address,1,create=True)
+        txs=Alice.send(Bob.address,10000,create=True)
         Bob.receive(Alice.address,txs,signed=False)
         #Bob gives back the transaction signed
         txs=Bob.send(Alice.address)
@@ -95,10 +109,31 @@ def State_Channel_Payments(number):
     Alice.presentation(Bob.address) #cost 6000 microalgos
     Bob.close_channel(Alice.address) #cost 1000 microAlgos
     Alice.delete(Bob.address)
+    return number,15000
 
 
-#State_Channel_Payments(1000)
-Onchain(1000)
+if __name__=="__main__":
+
+    if("stats" not in os.listdir("./")):
+        os.mkdir("./stats")
+
+    n_txs = [1,5,15,20,50,100]
+   
+
+    with open("./stats/onchain_consecutive.csv","w") as fd:
+        csv_writer=csv.writer(fd)
+        for i in n_txs:
+            csv_writer.writerow(Onchain(i)) 
+
+    
+    
+"""with open("./stats/state_channel.csv","w") as fd:
+        csv_writer=csv.writer(fd)
+        for i in n_txs:
+            csv_writer.writerow(State_Channel(i)) """
+        
+
+
 
 
 

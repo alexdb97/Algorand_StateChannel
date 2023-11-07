@@ -54,7 +54,8 @@ def open_channel(pay:abi.PaymentTransaction):
     
     handle_creation= Seq(
         #Initialize all the variables
-        
+
+        Assert(App.globalGet(Bytes("open"))==Int(0)),
         App.globalPut(Bytes("addA"),Txn.accounts[1]),
         App.globalPut(Bytes("ammA"),Int(0)),
         App.globalPut(Bytes("addB"),Txn.accounts[2]),
@@ -64,6 +65,7 @@ def open_channel(pay:abi.PaymentTransaction):
     
         #Payment of 1 algo minimum balance
         Assert(pay.get().receiver()==Global.current_application_address()),
+        App.globalPut(Bytes("open"),Int(1)),
         Approve(),
     )
 
@@ -91,7 +93,7 @@ def deposit(pay:abi.PaymentTransaction):
 
 
 @router.method
-def tryClose(msg:abi.DynamicBytes):
+def presentation(msg:abi.DynamicBytes):
     
     app = ScratchVar(TealType.uint64)
     app2 = ScratchVar(TealType.uint64)
@@ -125,13 +127,13 @@ def tryClose(msg:abi.DynamicBytes):
                                 Seq(
                                 App.globalPut(Bytes("revocationSubmitter"),App.globalGet(Bytes("addB"))),
                                 App.globalPut(Bytes("secret"),secret),
-                                App.globalPut(Bytes("The_other_secret1"),secret2)),
+                                ),
                                 
                         #Else
                                 Seq(
                                 App.globalPut(Bytes("revocationSubmitter"),App.globalGet(Bytes("addA"))),
                                 App.globalPut(Bytes("secret"),secret2),
-                                App.globalPut(Bytes("The_other_secret2"),secret)),
+                                ),
                             )
                         )
     
@@ -156,7 +158,7 @@ def tryClose(msg:abi.DynamicBytes):
 
 
 @router.method
-def closeChannel(secret:abi.DynamicBytes):
+def close_channel(secret:abi.DynamicBytes):
   
     addA = App.globalGet(Bytes("addA"))
     addB = App.globalGet(Bytes("addB"))
