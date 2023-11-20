@@ -62,6 +62,7 @@ def Onchain(number):
         txs = tx.sign(pkA)
         total_fee = total_fee+tx.fee
         txn_res=alg.send_transaction(txs)
+        res = transaction.wait_for_confirmation(alg,txn_res,1000)
     
     return number,total_fee
 
@@ -114,23 +115,23 @@ def state_channel(number):
 
 if __name__=="__main__":
 
-    if("stats" not in os.listdir("./")):
-        os.mkdir("./stats")
+    """  if("stats" not in os.listdir("./")):
+        os.mkdir("./stats") """
 
     n_txs = [1,5,15,20,50,100]
    
 
-    with open("./stats/onchain_consecutive.csv","w") as fd:
+    with open("./main-net/onchain.csv","w") as fd:
         csv_writer=csv.writer(fd)
         for i in n_txs:
             csv_writer.writerow(Onchain(i)) 
 
     
     
-"""with open("./stats/state_channel.csv","w") as fd:
+"""     with open("./main-net/state_channel.csv","w") as fd:
         csv_writer=csv.writer(fd)
         for i in n_txs:
-            csv_writer.writerow(State_Channel(i)) """
+            csv_writer.writerow(state_channel(i))  """
         
 
 
