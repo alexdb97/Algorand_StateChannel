@@ -1,3 +1,4 @@
+import algosdk
 from pyteal import *
 import logging 
 
@@ -104,8 +105,9 @@ def presentation(msg:abi.DynamicBytes):
     amnt2 = Btoi(Extract(enc,Int(16),Int(8)))
     secret = Extract(enc,Int(24),Int(32))
     secret2 = Extract(enc,Int(56),Int(32))
-    signature1 = Extract(enc,Int(88),Int(64))
-    signature2 = Extract(enc,Int(152),Int(64))
+    app_id = Btoi(Extract(enc,Int(88),Int(8)))
+    signature1 = Extract(enc,Int(96),Int(64))
+    signature2 = Extract(enc,Int(160),Int(64))
     body = Extract(enc,Int(0),Len(enc)-Int(128))
 
     #Signature verify
@@ -143,6 +145,8 @@ def presentation(msg:abi.DynamicBytes):
                 Assert(And(ver_signature1,ver_signature2)==Int(1)),
                 #Verification on amount (sum of proposed transfer must be equal to the sum of stored amount)
                 verification_amount,
+                #Verification of applicationID
+                Assert(app_id==Global.current_application_id()),
                 #Update the global state
                 App.globalPut(Bytes("ammA"),amnt1),
                 App.globalPut(Bytes("ammB"),amnt2),

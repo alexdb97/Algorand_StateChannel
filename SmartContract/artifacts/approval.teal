@@ -223,7 +223,7 @@ int 128
 extract3
 load 6
 extract 2 0
-extract 88 64
+extract 96 64
 byte "addA"
 app_global_get
 ed25519verify_bare
@@ -238,7 +238,7 @@ int 128
 extract3
 load 6
 extract 2 0
-extract 152 64
+extract 160 64
 byte "addB"
 app_global_get
 ed25519verify_bare
@@ -264,6 +264,13 @@ app_global_get
 store 8
 load 7
 load 8
+==
+assert
+load 6
+extract 2 0
+extract 88 8
+btoi
+global CurrentApplicationID
 ==
 assert
 byte "ammA"

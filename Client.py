@@ -38,7 +38,7 @@ class Client(algod.AlgodClient):
         appid,address= c.open_channel()
         self.opened_channels[counterpart]=c
 
-        o = OffChainBalance(self,self.address,counterpart)
+        o = OffChainBalance(self,self.address,counterpart,appid)
         self.off_channel[counterpart]=o
         
         return contract,appid,address
@@ -48,7 +48,7 @@ class Client(algod.AlgodClient):
         #Verify the state of the channel and the code of it is a part that will come later
         c = ChainChannel(self,contract=contract,app_id=app_id,app_address=app_address,address1=counterpart,address2=self.address)
         self.opened_channels[counterpart]=c
-        o = OffChainBalance(self,counterpart,self.address)
+        o = OffChainBalance(self,counterpart,self.address,app_id)
         self.off_channel[counterpart]=o
 
     def deposit(self,value,counterpart):

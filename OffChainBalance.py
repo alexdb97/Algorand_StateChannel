@@ -11,7 +11,7 @@ class OffChainBalance():
     and the current balance.
     """ 
 
-    def __init__(self,algod,address1,address2) -> None:
+    def __init__(self,algod,address1,address2,app_id) -> None:
         self.secrets = []
         self.digest=None
         self.algod=algod
@@ -21,6 +21,7 @@ class OffChainBalance():
         self.amnt1 = 0
         self.amnt2 = 0
         self.index=0
+        self.app_id=app_id
 
 
 
@@ -40,14 +41,14 @@ class OffChainBalance():
         if(self.algod.address==self.address1):
             self.amnt1=self.amnt1+value
             self.index=self.index+1
-            tx= MyTransaction(self.index,self.address1,self.address2,self.amnt1,self.amnt2,digest1,self.digest)
+            tx= MyTransaction(self.index,self.address1,self.address2,self.amnt1,self.amnt2,digest1,self.digest,self.app_id)
             tx.sign(self.algod.signer,self.algod.address)
             self.secrets.append([random_bytes,None])
             return tx.serialize()
         else:
             self.amnt2=self.amnt2+value
             self.index=self.index+1
-            tx= MyTransaction(self.index,self.address1,self.address2,self.amnt1,self.amnt2,self.digest,digest1)
+            tx= MyTransaction(self.index,self.address1,self.address2,self.amnt1,self.amnt2,self.digest,digest1,self.app_id)
             tx.sign(self.algod.signer,self.algod.address)
             self.secrets.append([None,random_bytes])
             return tx.serialize()
@@ -68,7 +69,7 @@ class OffChainBalance():
         if(self.algod.address==self.address1):
             if(self.amnt1>=value):
                 self.index=self.index+1
-                tx = MyTransaction(self.index,self.address1,self.address2,self.amnt1-value,self.amnt2+value,digest1,self.digest)
+                tx = MyTransaction(self.index,self.address1,self.address2,self.amnt1-value,self.amnt2+value,digest1,self.digest,self.app_id)
                 tx.sign(self.algod.signer,self.address1)
                 self.secrets.append([random_bytes,None])
                 self.digest=None
@@ -76,7 +77,7 @@ class OffChainBalance():
         else:
              if(self.amnt2>=value):
                 self.index=self.index+1
-                tx = MyTransaction(self.index,self.address1,self.address2,self.amnt1+value,self.amnt2-value,self.digest,digest1)
+                tx = MyTransaction(self.index,self.address1,self.address2,self.amnt1+value,self.amnt2-value,self.digest,digest1,self.app_id)
                 tx.sign(self.algod.signer,self.address2)
                 self.secrets.append([None,random_bytes])
                 self.digest=None

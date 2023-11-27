@@ -38,7 +38,7 @@ def aux_other_client():
     while(1):
 
         sp=algod_client.suggested_params()
-        tx = transaction.PaymentTxn(address,sp=sp,receiver=address,amt=util.algos_to_microalgos(1))
+        tx = transaction.PaymentTxn(address,sp=sp,receiver=address,amt=util.algos_to_microalgos(1),note=str(count).encode('utf-8'))
         txs = tx.sign(private_key)
         idtx=algod_client.send_transaction(txs)
         transaction.wait_for_confirmation(algod_client,idtx,1000)

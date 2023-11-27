@@ -22,10 +22,11 @@ class MyTransaction():
 
     the balance of both accounts.
     """
-    def __init__(self,index=None,addr1=None,addr2=None,amnt1=0,amnt2=0,secret=None,secret2=None):
+    def __init__(self,index=None,addr1=None,addr2=None,amnt1=0,amnt2=0,secret=None,secret2=None,app_id=None):
         
         self.index=index
         self.addr1=addr1
+        self.app_id=app_id
         self.addr2 = addr2
         self.amnt1 = amnt1
         self.amnt2 =amnt2
@@ -66,7 +67,7 @@ class MyTransaction():
     return : json_transaction
     """ 
     def serialize(self):
-        attributes_to_include = ['index', 'addr1', 'addr2', 'amnt1', 'amnt2']
+        attributes_to_include = ['index','app_id','addr1', 'addr2', 'amnt1', 'amnt2']
         js = {attr: getattr(self, attr) for attr in attributes_to_include}
         js['secret']=self.secret.decode('latin-1')
         js['secret2']=self.secret2.decode('latin-1')
@@ -87,7 +88,7 @@ class MyTransaction():
     def deserialize(self,str):
        
         d = json.loads(str)
-        attributes = ['index', 'addr1', 'addr2', 'amnt1', 'amnt2']
+        attributes = ['index', 'app_id','addr1', 'addr2', 'amnt1', 'amnt2']
         for attr in attributes:
             setattr(self,attr,d[attr])
         self.secret = d['secret'].encode('latin-1')
@@ -148,7 +149,7 @@ class MyTransaction():
         body.extend(self.amnt2.to_bytes(8,'big'))
         body.extend(self.secret)
         body.extend(self.secret2)
-    
+        body.extend(self.app_id.to_bytes(8,'big'))
         return body
         
 
