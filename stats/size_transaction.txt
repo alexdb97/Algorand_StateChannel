@@ -1,1 +1,0 @@
-the size of one transaction is of 1KB
